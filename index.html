@@ -82,14 +82,11 @@ const $=id=>document.getElementById(id);
 const money=n=>Math.round(n||0).toLocaleString("zh-TW");
 const num=n=>Number(n||0);
 function saveData(){localStorage.setItem(KEY,JSON.stringify(data))}
-function today(){const d=new Date(),y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0");return `${y}
-
+function today(){const d=new Date(),y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0");return `${y}-${m}-${day}`}
 function backupStamp(){
-  const d=new Date();
-  const p=n=>String(n).padStart(2,"0");
-  return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+"_"+p(d.getHours())+"-"+p(d.getMinutes())+"-"+p(d.getSeconds());
+  const d=new Date(),p=n=>String(n).padStart(2,"0");
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}_${p(d.getHours())}-${p(d.getMinutes())}-${p(d.getSeconds())}`;
 }
--${m}-${day}`}
 $("date").value=today(); $("monthPicker").value=today().slice(0,7); $("yearPicker").value=new Date().getFullYear();
 
 document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{
@@ -134,7 +131,7 @@ function edit(id){
 }
 function shiftDate(days){
  const d=new Date(($("date").value||today())+"T12:00:00");d.setDate(d.getDate()+days);
- $("date").value=d.toISOString().slice(0,10);renderDaily();
+ $("date").value=localDateStr(d);renderDaily();
 }
 $("prevDay").onclick=()=>shiftDate(-1);$("nextDay").onclick=()=>shiftDate(1);
 $("todayBtn").onclick=()=>{$("date").value=today();renderDaily()};
@@ -168,39 +165,34 @@ $("export").onclick=()=>{
  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");
  a.href=URL.createObjectURL(blob);a.download=`車趟日報備份_${backupStamp()}.json`;a.click();URL.revokeObjectURL(a.href);
 };
-$("importBtn").onclick=()=>$("file").click();
-if($("dailyRestore")) $("dailyRestore").onclick=()=>$("file").click();
-if($("monthRestore")) $("monthRestore").onclick=()=>$("file").click();
-if($("yearRestore")) $("yearRestore").onclick=()=>$("file").click();
+function openRestore(){ $("file").click(); }
+$("importBtn").onclick=openRestore;
+$("dailyRestore").onclick=openRestore;
+$("monthRestore").onclick=openRestore;
+$("yearRestore").onclick=openRestore;
 $("file").onchange=e=>{
- const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!Array.isArray(x))throw 0;
- if(confirm(`即將匯入 ${x.length} 筆資料。現有資料會被覆蓋，確定嗎？`)){data=x;saveData();renderAll();alert("還原完成");}}catch{alert("檔案格式不正確")}};r.readAsText(f);e.target.value="";
+  const f=e.target.files[0];
+  if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const x=JSON.parse(r.result);
+      if(!Array.isArray(x)) throw new Error("格式錯誤");
+      const ok=confirm(`確定要還原這份備份嗎？\n\n備份內有 ${x.length} 筆資料。\n還原後，目前資料會被這份備份取代。\n\n不確定請按「取消」。`);
+      if(ok){
+        data=x;
+        saveData();
+        renderAll();
+        alert("✅ 備份已成功還原");
+      }
+    }catch(err){
+      alert("無法讀取這份備份檔，請選擇車趟日報的 .json 備份。");
+    }
+    e.target.value="";
+  };
+  r.readAsText(f);
 };
 renderAll();
-
-$("file").onchange=e=>{
- const f=e.target.files[0];
- if(!f) return;
- const reader=new FileReader();
- reader.onload=()=>{
-  try{
-   const obj=JSON.parse(reader.result);
-   const imported=Array.isArray(obj)?obj:(Array.isArray(obj.data)?obj.data:null);
-   if(!imported){alert("這不是有效的車趟日報備份檔。");e.target.value="";return;}
-   if(!confirm("確定要還原這份備份嗎？\n\n目前車趟資料將改成這份備份的內容。\n如果不確定，請按「取消」。")){
-    e.target.value=""; return;
-   }
-   data=imported;
-   saveData();
-   renderAll();
-   alert("✅ 備份已成功還原。");
-  }catch(err){
-   alert("無法讀取這份備份檔，請確認選的是車趟日報的 .json 備份。");
-  }
-  e.target.value="";
- };
- reader.readAsText(f);
-};
 </script>
 </body>
 </html>
