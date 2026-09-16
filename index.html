@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<title>🚚 車趟日報｜每日使用版</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f4f6;color:#111827;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC",sans-serif}
+header{position:sticky;top:0;z-index:5;background:#111827;color:#fff;padding:14px 16px calc(14px + env(safe-area-inset-top));box-shadow:0 2px 10px #0002}
+h1{font-size:20px;margin:0 0 10px}.tabs{display:flex;gap:7px}.tabs button{flex:1;border:0;border-radius:10px;padding:10px 4px;background:#374151;color:#fff;font-weight:700}.tabs button.active{background:#fff;color:#111827}
+main{max-width:760px;margin:auto;padding:14px 12px 40px}.card{background:#fff;border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 1px 5px #00000012}
+h2{font-size:17px;margin:0 0 12px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}label{font-size:13px;font-weight:700;color:#4b5563}input,select{width:100%;margin-top:5px;border:1px solid #d1d5db;border-radius:10px;padding:11px;font-size:16px;background:#fff}
+.full{grid-column:1/-1}.btn{border:0;border-radius:11px;padding:12px 14px;font-weight:800;font-size:15px;cursor:pointer}.primary{background:#111827;color:#fff}.secondary{background:#e5e7eb;color:#111827}.danger{background:#fee2e2;color:#991b1b}.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1}
+.summary{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.metric{background:#f9fafb;border-radius:12px;padding:11px}.metric b{display:block;font-size:20px;margin-top:3px}.metric span{font-size:12px;color:#6b7280}
+.tablewrap{overflow:auto}.table{width:100%;border-collapse:collapse;font-size:13px;min-width:650px}.table th,.table td{padding:9px 7px;border-bottom:1px solid #e5e7eb;text-align:right}.table th:first-child,.table td:first-child,.table th:nth-child(3),.table td:nth-child(3){text-align:left}.table th{background:#f9fafb}
+.item{border:1px solid #e5e7eb;border-radius:13px;padding:11px;margin-top:9px}.itemtop{display:flex;justify-content:space-between;gap:8px}.muted{color:#6b7280;font-size:13px}.profit{font-weight:800}.empty{text-align:center;color:#6b7280;padding:25px 8px}
+.note{font-size:12px;color:#6b7280;line-height:1.6}.hidden{display:none!important}
+@media(min-width:600px){.summary{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+<header>
+<h1>🚚 🚚 車趟日報｜每日使用版</h1>
+<div class="tabs">
+<button data-tab="daily" class="active">每日輸入</button>
+<button data-tab="monthly">每月統計</button>
+<button data-tab="yearly">年度統計</button>
+</div>
+</header>
+<main>
+<section id="daily">
+<div class="card">
+<h2>新增每日紀錄</h2>
+<div class="grid">
+<label>日期<input id="date" type="date"></label>
+<label>趟次<input id="tripNo" type="number" min="1" step="1" placeholder="例如 1"></label>
+<label class="full">地點<input id="place" type="text" placeholder="例如 台北港"></label>
+<label>噸數<input id="tons" type="number" min="0" step="0.01" placeholder="23"></label>
+<label>車趟<input id="trips" type="number" min="0" step="1" value="1"></label>
+<label>金額（客戶運費）<input id="amount" type="number" min="0" step="1" placeholder="3000"></label>
+<label>支出<input id="expense" type="number" min="0" step="1" placeholder="1500"></label>
+</div>
+<p class="note">收入會自動計算：<b>金額 − 支出</b>。例如金額 3,000、支出 1,500，收入就是 1,500。</p>
+<div class="row"><button class="btn primary" id="save">＋ 新增紀錄</button><button class="btn secondary" id="clear">清空</button></div><div class="row" style="margin-top:8px"><button class="btn secondary" id="prevDay">← 前一天</button><button class="btn secondary" id="todayBtn">今天</button><button class="btn secondary" id="nextDay">後一天 →</button></div>
+</div>
+
+<div class="card"><h2 id="dailyTitle">今日統計</h2><div class="summary" id="dailySummary"></div>
+<div style="margin-top:10px"><button class="btn secondary" id="dailyBackup">💾 立即備份全部資料</button></div>
+<p class="note">建議定期按「立即備份全部資料」，把備份檔保存到 iPhone「檔案」或 iCloud。</p></div>
+<div class="card"><h2>每日紀錄</h2><div id="records"></div></div>
+</section>
+
+<section id="monthly" class="hidden">
+<div class="card"><h2>每月統計</h2><label>選擇月份<input id="monthPicker" type="month"></label>
+<div style="margin-top:10px"><button class="btn secondary" id="monthBackup">💾 備份全部資料</button></div></div>
+<div class="card"><div class="summary" id="monthSummary"></div></div>
+<div class="card"><h2>該月地點統計</h2><div class="tablewrap"><table class="table" id="placeTable"></table></div></div>
+</section>
+
+<section id="yearly" class="hidden">
+<div class="card"><h2>年度統計</h2><label>選擇年份<input id="yearPicker" type="number" min="2000" max="2100"></label>
+<div style="margin-top:10px"><button class="btn secondary" id="yearBackup">💾 備份全部資料</button></div></div>
+<div class="card"><div class="summary" id="yearSummary"></div></div>
+<div class="card"><h2>12 個月統計</h2><div class="tablewrap"><table class="table" id="yearTable"></table></div></div>
+<div class="card"><p class="note">資料只儲存在這支手機的瀏覽器本機。若清除瀏覽器網站資料，資料可能會消失；建議定期使用下方備份功能。</p>
+<div class="row"><button class="btn secondary" id="export">⬇️ 備份資料</button><button class="btn secondary" id="importBtn">⬆️ 還原資料</button><input id="file" type="file" accept=".json" class="hidden"></div></div>
+</section>
+</main>
+<script>
+const KEY="truck_daily_report_v1";
+let data=JSON.parse(localStorage.getItem(KEY)||"[]");
+const $=id=>document.getElementById(id);
+const money=n=>Math.round(n||0).toLocaleString("zh-TW");
+const num=n=>Number(n||0);
+function saveData(){localStorage.setItem(KEY,JSON.stringify(data))}
+function today(){return new Date().toISOString().slice(0,10)}
+$("date").value=today(); $("monthPicker").value=today().slice(0,7); $("yearPicker").value=new Date().getFullYear();
+
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{
+ document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));b.classList.add("active");
+ ["daily","monthly","yearly"].forEach(x=>$(x).classList.toggle("hidden",x!==b.dataset.tab));
+ renderAll();
+});
+function calc(arr){
+ return {tons:arr.reduce((s,x)=>s+num(x.tons),0),trips:arr.reduce((s,x)=>s+num(x.trips),0),
+ amount:arr.reduce((s,x)=>s+num(x.amount),0),expense:arr.reduce((s,x)=>s+num(x.expense),0),
+ income:arr.reduce((s,x)=>s+num(x.amount)-num(x.expense),0)};
+}
+function summaryHTML(c){
+ return [["總噸數",c.tons.toFixed(2)+" 噸"],["總車趟",money(c.trips)+" 趟"],["總金額",money(c.amount)+" 元"],["總支出",money(c.expense)+" 元"],["實際收入",money(c.income)+" 元"]]
+ .map(([a,b])=>`<div class="metric"><span>${a}</span><b>${b}</b></div>`).join("");
+}
+$("save").onclick=()=>{
+ const date=$("date").value, place=$("place").value.trim(), tons=num($("tons").value), trips=num($("trips").value), amount=num($("amount").value), expense=num($("expense").value);
+ if(!date||!place){alert("請至少填寫日期與地點");return}
+ if(trips<0||tons<0||amount<0||expense<0){alert("數字不能小於 0");return}
+ data.push({id:Date.now(),date,tripNo:num($("tripNo").value)||null,place,tons,trips,amount,expense,income:amount-expense});
+ data.sort((a,b)=>a.date.localeCompare(b.date)||((a.tripNo||0)-(b.tripNo||0))||a.id-b.id);saveData();
+ $("place").value="";$("tons").value="";$("amount").value="";$("expense").value="";$("tripNo").value="";
+ renderAll();
+};
+$("clear").onclick=()=>{["place","tons","amount","expense","tripNo"].forEach(x=>$(x).value="");$("date").value=today();$("trips").value=1};
+
+function renderDaily(){
+ const d=$("date").value||today(), arr=data.filter(x=>x.date===d), c=calc(arr);
+ $("dailyTitle").textContent=d+" 統計";$("dailySummary").innerHTML=summaryHTML(c);
+ if(!arr.length){$("records").innerHTML='<div class="empty">這天還沒有紀錄</div>';return}
+ $("records").innerHTML=arr.map(x=>`<div class="item">
+ <div class="itemtop"><b>${x.tripNo?`第 ${x.tripNo} 趟 · `:""}${esc(x.place)}</b><div class="row" style="flex:0 0 auto"><button class="btn secondary" onclick="edit(${x.id})">修改</button><button class="btn danger" onclick="del(${x.id})">刪除</button></div></div>
+ <div class="muted">噸數 ${x.tons.toFixed(2)} 噸　車趟 ${x.trips}　金額 ${money(x.amount)} 元　支出 ${money(x.expense)} 元</div>
+ <div class="profit">實際收入：${money(x.amount-x.expense)} 元</div></div>`).join("");
+}
+function del(id){if(confirm("確定刪除這筆紀錄？")){data=data.filter(x=>x.id!==id);saveData();renderAll()}}
+function edit(id){
+ const x=data.find(v=>v.id===id); if(!x)return;
+ $("date").value=x.date;$("tripNo").value=x.tripNo||"";$("place").value=x.place;$("tons").value=x.tons;$("trips").value=x.trips;$("amount").value=x.amount;$("expense").value=x.expense;
+ data=data.filter(v=>v.id!==id);saveData();renderAll();window.scrollTo({top:0,behavior:"smooth"});
+}
+function shiftDate(days){
+ const d=new Date(($("date").value||today())+"T12:00:00");d.setDate(d.getDate()+days);
+ $("date").value=d.toISOString().slice(0,10);renderDaily();
+}
+$("prevDay").onclick=()=>shiftDate(-1);$("nextDay").onclick=()=>shiftDate(1);
+$("todayBtn").onclick=()=>{$("date").value=today();renderDaily()};
+function renderMonth(){
+ const m=$("monthPicker").value, arr=data.filter(x=>x.date.startsWith(m)), c=calc(arr);$("monthSummary").innerHTML=summaryHTML(c);
+ const map={};arr.forEach(x=>{map[x.place]??=[];map[x.place].push(x)});
+ let rows=Object.entries(map).sort((a,b)=>b[1].reduce((s,x)=>s+x.amount,0)-a[1].reduce((s,x)=>s+x.amount,0)).map(([p,a])=>{let c=calc(a);return `<tr><td>${esc(p)}</td><td>${c.tons.toFixed(2)}</td><td>${c.trips}</td><td>${money(c.amount)}</td><td>${money(c.expense)}</td><td>${money(c.income)}</td></tr>`}).join("");
+ $("placeTable").innerHTML=`<tr><th>地點</th><th>噸數</th><th>車趟</th><th>金額</th><th>支出</th><th>收入</th></tr>${rows||'<tr><td colspan="6" class="empty">本月沒有資料</td></tr>'}`;
+}
+function renderYear(){
+ const y=String($("yearPicker").value), arr=data.filter(x=>x.date.startsWith(y+"-")), c=calc(arr);$("yearSummary").innerHTML=summaryHTML(c);
+ let rows="";for(let i=1;i<=12;i++){let m=`${y}-${String(i).padStart(2,"0")}`,a=data.filter(x=>x.date.startsWith(m)),z=calc(a);rows+=`<tr><td>${i}月</td><td>${z.tons.toFixed(2)}</td><td>${z.trips}</td><td>${money(z.amount)}</td><td>${money(z.expense)}</td><td>${money(z.income)}</td></tr>`}
+ $("yearTable").innerHTML=`<tr><th>月份</th><th>噸數</th><th>車趟</th><th>金額</th><th>支出</th><th>收入</th></tr>${rows}<tr><th>全年</th><th>${c.tons.toFixed(2)}</th><th>${c.trips}</th><th>${money(c.amount)}</th><th>${money(c.expense)}</th><th>${money(c.income)}</th></tr>`;
+}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function renderAll(){renderDaily();renderMonth();renderYear()}
+$("date").onchange=renderDaily;$("monthPicker").onchange=renderMonth;$("yearPicker").onchange=renderYear;
+
+$("dailyBackup").onclick=()=>{
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);a.download=`車趟日報備份_${today()}.json`;a.click();URL.revokeObjectURL(a.href);
+ alert("備份檔已產生，請將檔案保存到「檔案」App 或 iCloud。");
+};
+function backupAll(){
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);a.download=`車趟日報備份_${today()}.json`;a.click();URL.revokeObjectURL(a.href);
+}
+if($("monthBackup")) $("monthBackup").onclick=backupAll;
+if($("yearBackup")) $("yearBackup").onclick=backupAll;
+$("export").onclick=()=>{
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);a.download=`車趟日報備份_${today()}.json`;a.click();URL.revokeObjectURL(a.href);
+};
+$("importBtn").onclick=()=>$("file").click();
+$("file").onchange=e=>{
+ const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!Array.isArray(x))throw 0;
+ if(confirm(`即將匯入 ${x.length} 筆資料。現有資料會被覆蓋，確定嗎？`)){data=x;saveData();renderAll();alert("還原完成");}}catch{alert("檔案格式不正確")}};r.readAsText(f);e.target.value="";
+};
+renderAll();
+</script>
+</body>
+</html>
