@@ -39,9 +39,12 @@ h2{font-size:17px;margin:0 0 12px}.grid{display:grid;grid-template-columns:1fr 1
 <label>車趟<input id="trips" type="number" min="0" step="1" value="1"></label>
 <label>每噸單價<input id="unitPrice" type="number" min="0" step="1" placeholder="例如 150"></label>
 <label>每車趟單價<input id="tripPrice" type="number" min="0" step="1" placeholder="例如 3000"></label>
-<label>支出<input id="expense" type="number" min="0" step="1" placeholder="1500"></label>
+<label>支出項目<input id="expenseItem" type="text" placeholder="例如 油錢"></label>
+<label>支出金額<input id="expense" type="number" min="0" step="1" placeholder="1500"></label>
+<label>收入項目<input id="incomeItem" type="text" placeholder="例如 其他收入"></label>
+<label>收入金額<input id="manualIncome" type="number" min="0" step="1" placeholder="1500"></label>
 </div>
-<p class="note">金額會自動計算：<b>噸數金額＝每噸單價 × 總噸數</b>，<b>車趟金額＝每車趟單價 × 車趟</b>；運費總金額＝噸數金額＋車趟金額；實際收入＝運費總金額 − 支出。</p>
+<p class="note">金額會自動計算：<b>噸數金額＝每噸單價 × 總噸數</b>，<b>車趟金額＝每車趟單價 × 車趟</b>；運費總金額＝噸數金額＋車趟金額。支出與收入僅供自行記錄項目與金額，不參與自動加減。</p>
 <div class="row"><button class="btn primary" id="save">＋ 新增紀錄</button><button class="btn secondary" id="clear">清空</button></div><div class="row" style="margin-top:8px"><button class="btn secondary" id="prevDay">← 前一天</button><button class="btn secondary" id="todayBtn">今天</button><button class="btn secondary" id="nextDay">後一天 →</button></div>
 </div>
 
@@ -96,23 +99,22 @@ document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{
 });
 function calc(arr){
  return {tons:arr.reduce((s,x)=>s+num(x.tons),0),trips:arr.reduce((s,x)=>s+num(x.trips),0),
- amount:arr.reduce((s,x)=>s+num(x.amount),0),expense:arr.reduce((s,x)=>s+num(x.expense),0),
- income:arr.reduce((s,x)=>s+num(x.amount)-num(x.expense),0)};
+ amount:arr.reduce((s,x)=>s+num(x.amount),0)};
 }
 function summaryHTML(c){
- return [["總噸數",c.tons.toFixed(2)+" 噸"],["總車趟",money(c.trips)+" 趟"],["運費總金額",money(c.amount)+" 元"],["總支出",money(c.expense)+" 元"],["實際收入",money(c.income)+" 元"]]
+ return [["總噸數",c.tons.toFixed(2)+" 噸"],["總車趟",money(c.trips)+" 趟"],["運費總金額",money(c.amount)+" 元"]]
  .map(([a,b])=>`<div class="metric"><span>${a}</span><b>${b}</b></div>`).join("");
 }
 $("save").onclick=()=>{
- const date=$("date").value, place=$("place").value.trim(), tons=num($("tons").value), trips=num($("trips").value), unitPrice=num($("unitPrice").value), tripPrice=num($("tripPrice").value), expense=num($("expense").value), amount=unitPrice*tons+tripPrice*trips;
+ const date=$("date").value, place=$("place").value.trim(), tons=num($("tons").value), trips=num($("trips").value), unitPrice=num($("unitPrice").value), tripPrice=num($("tripPrice").value), expenseItem=$("expenseItem").value.trim(), expense=num($("expense").value), incomeItem=$("incomeItem").value.trim(), manualIncome=num($("manualIncome").value), amount=unitPrice*tons+tripPrice*trips;
  if(!date||!place){alert("請至少填寫日期與地點");return}
- if(trips<0||tons<0||unitPrice<0||tripPrice<0||expense<0){alert("數字不能小於 0");return}
- data.push({id:Date.now(),date,place,tons,trips,unitPrice,tripPrice,amount,expense,income:amount-expense});
+ if(trips<0||tons<0||unitPrice<0||tripPrice<0||expense<0||manualIncome<0){alert("數字不能小於 0");return}
+ data.push({id:Date.now(),date,place,tons,trips,unitPrice,tripPrice,amount,expenseItem,expense,incomeItem,manualIncome});
  data.sort((a,b)=>a.date.localeCompare(b.date)||a.id-b.id);saveData();
- $("place").value="";$("tons").value="";$("unitPrice").value="";$("tripPrice").value="";$("expense").value="";
+ $("place").value="";$("tons").value="";$("unitPrice").value="";$("tripPrice").value="";$("expenseItem").value="";$("expense").value="";$("incomeItem").value="";$("manualIncome").value="";
  renderAll();
 };
-$("clear").onclick=()=>{["place","tons","unitPrice","tripPrice","expense"].forEach(x=>$(x).value="");$("date").value=today();$("trips").value=1};
+$("clear").onclick=()=>{["place","tons","unitPrice","tripPrice","expenseItem","expense","incomeItem","manualIncome"].forEach(x=>$(x).value="");$("date").value=today();$("trips").value=1};
 
 function renderDaily(){
  const d=$("date").value||today(), arr=data.filter(x=>x.date===d), c=calc(arr);
@@ -120,13 +122,14 @@ function renderDaily(){
  if(!arr.length){$("records").innerHTML='<div class="empty">這天還沒有紀錄</div>';return}
  $("records").innerHTML=arr.map(x=>`<div class="item">
  <div class="itemtop"><b>${esc(x.place)}</b><div class="row" style="flex:0 0 auto"><button class="btn secondary" onclick="edit(${x.id})">修改</button><button class="btn danger" onclick="del(${x.id})">刪除</button></div></div>
- <div class="muted">噸數 ${x.tons.toFixed(2)} 噸　每噸單價 ${money(x.unitPrice ?? 0)} 元／噸　車趟 ${x.trips}　每車趟單價 ${money(x.tripPrice ?? 0)} 元／趟　運費總金額 ${money(x.amount)} 元　支出 ${money(x.expense)} 元</div>
- <div class="profit">實際收入：${money(x.amount-x.expense)} 元</div></div>`).join("");
+ <div class="muted">噸數 ${x.tons.toFixed(2)} 噸　每噸單價 ${money(x.unitPrice ?? 0)} 元／噸　車趟 ${x.trips}　每車趟單價 ${money(x.tripPrice ?? 0)} 元／趟　運費總金額 ${money(x.amount)} 元</div>
+ <div class="muted">支出：${esc(x.expenseItem||"未填項目")}　${money(x.expense)} 元</div>
+ <div class="muted">收入：${esc(x.incomeItem||"未填項目")}　${money(x.manualIncome)} 元</div></div>`).join("");
 }
 function del(id){if(confirm("確定刪除這筆紀錄？")){data=data.filter(x=>x.id!==id);saveData();renderAll()}}
 function edit(id){
  const x=data.find(v=>v.id===id); if(!x)return;
- $("date").value=x.date;$("place").value=x.place;$("tons").value=x.tons;$("trips").value=x.trips;$("unitPrice").value=x.unitPrice ?? 0;$("tripPrice").value=x.tripPrice ?? 0;$("expense").value=x.expense;
+ $("date").value=x.date;$("place").value=x.place;$("tons").value=x.tons;$("trips").value=x.trips;$("unitPrice").value=x.unitPrice ?? 0;$("tripPrice").value=x.tripPrice ?? 0;$("expenseItem").value=x.expenseItem ?? "";$("expense").value=x.expense ?? 0;$("incomeItem").value=x.incomeItem ?? "";$("manualIncome").value=x.manualIncome ?? "";
  data=data.filter(v=>v.id!==id);saveData();renderAll();window.scrollTo({top:0,behavior:"smooth"});
 }
 function shiftDate(days){
@@ -138,13 +141,13 @@ $("todayBtn").onclick=()=>{$("date").value=today();renderDaily()};
 function renderMonth(){
  const m=$("monthPicker").value, arr=data.filter(x=>x.date.startsWith(m)), c=calc(arr);$("monthSummary").innerHTML=summaryHTML(c);
  const map={};arr.forEach(x=>{map[x.place]??=[];map[x.place].push(x)});
- let rows=Object.entries(map).sort((a,b)=>b[1].reduce((s,x)=>s+x.amount,0)-a[1].reduce((s,x)=>s+x.amount,0)).map(([p,a])=>{let c=calc(a);return `<tr><td>${esc(p)}</td><td>${c.tons.toFixed(2)}</td><td>${c.trips}</td><td>${money(c.amount)}</td><td>${money(c.expense)}</td><td>${money(c.income)}</td></tr>`}).join("");
- $("placeTable").innerHTML=`<tr><th>地點</th><th>噸數</th><th>車趟</th><th>金額</th><th>支出</th><th>收入</th></tr>${rows||'<tr><td colspan="6" class="empty">本月沒有資料</td></tr>'}`;
+ let rows=Object.entries(map).sort((a,b)=>b[1].reduce((s,x)=>s+x.amount,0)-a[1].reduce((s,x)=>s+x.amount,0)).map(([p,a])=>{let c=calc(a);return `<tr><td>${esc(p)}</td><td>${c.tons.toFixed(2)}</td><td>${c.trips}</td><td>${money(c.amount)}</td><td>${a.map(x=>`${esc(x.expenseItem||"未填項目")} ${money(x.expense)}元`).join("<br>")}</td><td>${a.map(x=>`${esc(x.incomeItem||"未填項目")} ${money(x.manualIncome)}元`).join("<br>")}</td></tr>`}).join("");
+ $("placeTable").innerHTML=`<tr><th>地點</th><th>噸數</th><th>車趟</th><th>金額</th><th>支出項目／金額</th><th>收入項目／金額</th></tr>${rows||'<tr><td colspan="6" class="empty">本月沒有資料</td></tr>'}`;
 }
 function renderYear(){
  const y=String($("yearPicker").value), arr=data.filter(x=>x.date.startsWith(y+"-")), c=calc(arr);$("yearSummary").innerHTML=summaryHTML(c);
- let rows="";for(let i=1;i<=12;i++){let m=`${y}-${String(i).padStart(2,"0")}`,a=data.filter(x=>x.date.startsWith(m)),z=calc(a);rows+=`<tr><td>${i}月</td><td>${z.tons.toFixed(2)}</td><td>${z.trips}</td><td>${money(z.amount)}</td><td>${money(z.expense)}</td><td>${money(z.income)}</td></tr>`}
- $("yearTable").innerHTML=`<tr><th>月份</th><th>噸數</th><th>車趟</th><th>金額</th><th>支出</th><th>收入</th></tr>${rows}<tr><th>全年</th><th>${c.tons.toFixed(2)}</th><th>${c.trips}</th><th>${money(c.amount)}</th><th>${money(c.expense)}</th><th>${money(c.income)}</th></tr>`;
+ let rows="";for(let i=1;i<=12;i++){let m=`${y}-${String(i).padStart(2,"0")}`,a=data.filter(x=>x.date.startsWith(m)),z=calc(a);rows+=`<tr><td>${i}月</td><td>${z.tons.toFixed(2)}</td><td>${z.trips}</td><td>${money(z.amount)}</td><td>${a.map(x=>`${esc(x.expenseItem||"未填項目")} ${money(x.expense)}元`).join("<br>")}</td><td>${a.map(x=>`${esc(x.incomeItem||"未填項目")} ${money(x.manualIncome)}元`).join("<br>")}</td></tr>`}
+ $("yearTable").innerHTML=`<tr><th>月份</th><th>噸數</th><th>車趟</th><th>金額</th><th>支出項目／金額</th><th>收入項目／金額</th></tr>${rows}<tr><th>全年</th><th>${c.tons.toFixed(2)}</th><th>${c.trips}</th><th>${money(c.amount)}</th><th>${arr.map(x=>`${esc(x.expenseItem||"未填項目")} ${money(x.expense)}元`).join("<br>")}</th><th>${arr.map(x=>`${esc(x.incomeItem||"未填項目")} ${money(x.manualIncome)}元`).join("<br>")}</th></tr>`;
 }
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function renderAll(){renderDaily();renderMonth();renderYear()}
