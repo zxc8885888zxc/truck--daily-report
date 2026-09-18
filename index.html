@@ -153,14 +153,20 @@ function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",
 function renderAll(){renderDaily();renderMonth();renderYear()}
 $("date").onchange=renderDaily;$("monthPicker").onchange=renderMonth;$("yearPicker").onchange=renderYear;
 
+function backupInfo(){
+ if(!data.length) return "本次備份共 0 筆資料。";
+ const dates=data.map(x=>x.date).filter(Boolean).sort();
+ return `本次共備份 ${data.length} 筆資料。\n資料日期：${dates[0]} ～ ${dates[dates.length-1]}`;
+}
 $("dailyBackup").onclick=()=>{
  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");
  a.href=URL.createObjectURL(blob);a.download=`車趟日報備份_${backupStamp()}.json`;a.click();URL.revokeObjectURL(a.href);
- alert("備份檔已產生，請將檔案保存到「檔案」App 或 iCloud。");
+ alert(backupInfo()+"\n\n備份檔已產生，請將檔案保存到「檔案」App 或 iCloud。");
 };
 function backupAll(){
  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");
  a.href=URL.createObjectURL(blob);a.download=`車趟日報備份_${backupStamp()}.json`;a.click();URL.revokeObjectURL(a.href);
+ alert(backupInfo()+"\n\n備份檔已產生，請將檔案保存到「檔案」App 或 iCloud。");
 }
 if($("monthBackup")) $("monthBackup").onclick=backupAll;
 if($("yearBackup")) $("yearBackup").onclick=backupAll;
