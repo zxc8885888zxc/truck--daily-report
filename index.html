@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
-<meta name="app-version" content="20260919-month-total-visible">
+<meta name="app-version" content="20260919-tontrips-amount">
 <title>🚚 車趟日報｜每日使用版</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f3f4f6;color:#111827;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC",sans-serif}
@@ -47,7 +47,7 @@ h2{font-size:17px;margin:0 0 12px}.grid{display:grid;grid-template-columns:1fr 1
 <label>收入項目<input id="incomeItem" type="text" placeholder="例如 其他收入"></label>
 <label>收入金額<input id="manualIncome" type="number" min="0" step="1" placeholder="1500"></label>
 </div>
-<p class="note">金額會自動計算：<b>噸數金額＝每噸單價 × 總噸數</b>，<b>車趟金額＝每車趟單價 × 車趟</b>；運費總金額＝噸數金額＋車趟金額。可輸入運費總金額％，系統會自動計算百分比金額。支出與收入僅供自行記錄項目與金額，不參與自動加減。</p>
+<p class="note">金額會自動計算：<b>噸數金額＝噸數 × 噸車趟 × 每噸單價</b>，<b>車趟金額＝每車趟單價 × 每車趟</b>；運費總金額＝噸數金額＋車趟金額。可輸入運費總金額％，系統會自動計算百分比金額。支出與收入僅供自行記錄項目與金額，不參與自動加減。</p>
 <div class="row"><button class="btn primary" id="save">＋ 新增紀錄</button><button class="btn secondary" id="clear">清空</button></div><div class="row" style="margin-top:8px"><button class="btn secondary" id="prevDay">← 前一天</button><button class="btn secondary" id="todayBtn">今天</button><button class="btn secondary" id="nextDay">後一天 →</button></div>
 </div>
 
@@ -113,7 +113,7 @@ function monthSummaryHTML(c){
  .map(([a,b])=>`<div class="metric"><span>${a}</span><b>${b}</b></div>`).join("");
 }
 $("save").onclick=()=>{
- const date=$("date").value, place=$("place").value.trim(), tons=num($("tons").value), tonTrips=num($("tonTrips").value), trips=num($("trips").value), unitPrice=num($("unitPrice").value), tripPrice=num($("tripPrice").value), expenseItem=$("expenseItem").value.trim(), expense=num($("expense").value), incomeItem=$("incomeItem").value.trim(), manualIncome=num($("manualIncome").value), amountPercent=num($("amountPercent").value), amount=unitPrice*tons+tripPrice*trips, percentAmount=amount*amountPercent/100;
+ const date=$("date").value, place=$("place").value.trim(), tons=num($("tons").value), tonTrips=num($("tonTrips").value), trips=num($("trips").value), unitPrice=num($("unitPrice").value), tripPrice=num($("tripPrice").value), expenseItem=$("expenseItem").value.trim(), expense=num($("expense").value), incomeItem=$("incomeItem").value.trim(), manualIncome=num($("manualIncome").value), amountPercent=num($("amountPercent").value), amount=unitPrice*tons*tonTrips+tripPrice*trips, percentAmount=amount*amountPercent/100;
  if(!date||!place){alert("請至少填寫日期與地點");return}
  if(trips<0||tonTrips<0||tons<0||unitPrice<0||tripPrice<0||expense<0||manualIncome<0||amountPercent<0){alert("數字不能小於 0");return}
  data.push({id:Date.now(),date,place,tons,tonTrips,trips,unitPrice,tripPrice,amount,amountPercent,percentAmount,expenseItem,expense,incomeItem,manualIncome});
