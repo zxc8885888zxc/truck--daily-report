@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
-<meta name="app-version" content="20260919-our-final-v11">
+<meta name="app-version" content="20260919-three-column-v12">
 <title>🚚 車趟日報｜每日使用版</title>
 <style>
 *{box-sizing:border-box}
@@ -50,6 +50,23 @@ input:focus,select:focus{border-color:#1687ee;box-shadow:0 0 0 3px #d9efff}
 .month-amount-result{color:#000;font-weight:900;font-size:17px}.month-total-tons{color:#000;font-weight:700;font-size:18px}.month-total-amount{color:#000;font-weight:900;font-size:18px}.month-total-percent{color:#dc2626;font-weight:900;font-size:18px}.month-summary-strong{color:#000;font-weight:900!important}.month-summary-percent{color:#dc2626!important;font-weight:900!important}
 #yearSummary .metric:nth-child(4) b{color:#dc2626;font-weight:950}.year-percent{color:#dc2626;font-weight:900}
 @media(min-width:700px){.summary{grid-template-columns:repeat(4,1fr)}}
+@media(min-width:1000px){
+ header{position:relative;padding-left:22px;padding-right:22px}
+ .brand{max-width:1450px;margin:0 auto 12px}
+ .tabs{max-width:1450px;margin:0 auto}
+ main{max-width:1480px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;align-items:start;padding:14px 12px 34px}
+ main>section{display:block!important;min-width:0}
+ #daily,#monthly,#yearly{grid-column:auto}
+ .card{margin-bottom:10px}
+ .grid{grid-template-columns:1fr 1fr}
+ .summary{grid-template-columns:repeat(2,1fr)}
+ .table{min-width:620px}
+ .tablewrap{max-height:520px}
+ #daily .card:first-child{border-top:4px solid #1687ee}
+ #monthly .card:first-child{border-top:4px solid #16a34a}
+ #yearly .card:first-child{border-top:4px solid #d08a00}
+}
+
 @media(max-width:430px){.brand-copy h1{font-size:22px}.brand-icon{font-size:31px}.tabs button{font-size:13px;padding:10px 2px}.card{padding:11px}.grid{gap:7px}.metric b{font-size:18px}}
 </style>
 </head>
