@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
-<meta name="app-version" content="20260919-empty-ton-red-trip-total-v5">
+<meta name="app-version" content="20260919-final-black-weight-v6">
 <title>🚚 車趟日報｜每日使用版</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f3f4f6;color:#111827;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC",sans-serif}
@@ -17,6 +17,7 @@ h2{font-size:17px;margin:0 0 12px}.grid{display:grid;grid-template-columns:1fr 1
 .tablewrap{overflow:auto}.table{width:100%;border-collapse:collapse;font-size:13px;min-width:650px}.table th,.table td{padding:9px 7px;border-bottom:1px solid #e5e7eb;text-align:right}.table th:first-child,.table td:first-child,.table th:nth-child(3),.table td:nth-child(3){text-align:left}.table th{background:#f9fafb}
 .item{border:1px solid #e5e7eb;border-radius:13px;padding:11px;margin-top:9px}.itemtop{display:flex;justify-content:space-between;gap:8px}.muted{color:#6b7280;font-size:13px}.profit{font-weight:800}.empty{text-align:center;color:#6b7280;padding:25px 8px}
 .note{font-size:12px;color:#6b7280;line-height:1.6}.hidden{display:none!important}
+.month-amount-result{color:#000;font-weight:900;font-size:17px}.month-total-tons{color:#000;font-weight:700;font-size:18px}.month-total-amount{color:#000;font-weight:900;font-size:18px}.month-summary-strong{color:#000;font-weight:900!important}
 @media(min-width:600px){.summary{grid-template-columns:repeat(3,1fr)}}
 </style>
 </head>
@@ -110,7 +111,7 @@ function summaryHTML(c){
 }
 function monthSummaryHTML(c){
  return [["總噸數",c.tons.toFixed(2)+" 噸"],["總車趟",money(c.trips)+" 趟"],["總金額",money(c.amount)+" 元"],["總％計算金額",money(c.percentAmount)+" 元"]]
- .map(([a,b])=>`<div class="metric"><span>${a}</span><b>${b}</b></div>`).join("");
+ .map(([a,b])=>`<div class="metric"><span>${a}</span><b class="${a==="總噸數"||a==="總金額"?"month-summary-strong":""}">${b}</b></div>`).join("");
 }
 $("save").onclick=()=>{
  const date=$("date").value, place=$("place").value.trim(), tons=num($("tons").value), tonTrips=num($("tonTrips").value), trips=num($("trips").value), unitPrice=num($("unitPrice").value), tripPrice=num($("tripPrice").value), expenseItem=$("expenseItem").value.trim(), expense=num($("expense").value), incomeItem=$("incomeItem").value.trim(), manualIncome=num($("manualIncome").value), amountPercent=num($("amountPercent").value), amount=unitPrice*tons*tonTrips+tripPrice*trips, percentAmount=amount*amountPercent;
@@ -148,8 +149,8 @@ $("todayBtn").onclick=()=>{$("date").value=today();renderDaily()};
 function renderMonth(){
  const m=$("monthPicker").value, arr=data.filter(x=>x.date.startsWith(m)), c=calc(arr);c.tons=arr.reduce((s,x)=>s+num(x.tons)*num(x.tonTrips),0);$("monthSummary").innerHTML=monthSummaryHTML(c);
   const map={};arr.forEach(x=>{const k=x.date+"|||"+x.place;map[k]??=[];map[k].push(x)});
- let rows=Object.entries(map).sort((a,b)=>a[1][0].date.localeCompare(b[1][0].date)||a[1][0].place.localeCompare(b[1][0].place)).map(([k,a])=>{let z=calc(a),x=a[0],tonsText=a.map(v=>{const t=num(v.tons),tt=num(v.tonTrips);return t===0&&tt===0?"":`${t} × ${tt}`}).join("<br>"),amountText=a.map(v=>{const tonAmount=num(v.tons)*num(v.tonTrips)*num(v.unitPrice),tripAmount=num(v.tripPrice)*num(v.trips);return tonAmount>0?money(tonAmount):(tripAmount>0?`${money(v.tripPrice ?? 0)} × ${num(v.trips)} = <span style="color:red;font-weight:800">${money(tripAmount)}</span>`:"")}).join("<br>");return `<tr><td>${esc(x.date)}</td><td>${esc(x.place)}</td><td>${tonsText}</td><td>${z.trips}</td><td>${amountText}</td><td>${money(z.percentAmount)}</td><td>${a.map(v=>`${esc(v.expenseItem||"未填項目")} ${money(v.expense)}元`).join("<br>")}</td><td>${a.map(v=>`${esc(v.incomeItem||"未填項目")} ${money(v.manualIncome)}元`).join("<br>")}</td></tr>`}).join("");
- $("placeTable").innerHTML=`<tr><th>日期</th><th>地點</th><th>噸數</th><th>總車趟</th><th>金額</th><th>％計算金額</th><th>支出項目／金額</th><th>收入項目／金額</th></tr>${rows||'<tr><td colspan="8" class="empty">本月沒有資料</td></tr>'}<tr><th></th><th>本月總計</th><th>總噸數<br>${c.tons.toFixed(2)}</th><th>總車趟<br>${money(c.trips)}</th><th>總金額<br>${money(c.amount)}</th><th>總％計算金額<br>${money(c.percentAmount)}</th><th></th><th></th></tr>`;
+ let rows=Object.entries(map).sort((a,b)=>a[1][0].date.localeCompare(b[1][0].date)||a[1][0].place.localeCompare(b[1][0].place)).map(([k,a])=>{let z=calc(a),x=a[0],tonsText=a.map(v=>{const t=num(v.tons),tt=num(v.tonTrips);return t===0&&tt===0?"":`${t} × ${tt}`}).join("<br>"),amountText=a.map(v=>{const tonAmount=num(v.tons)*num(v.tonTrips)*num(v.unitPrice),tripAmount=num(v.tripPrice)*num(v.trips);return tonAmount>0?`${num(v.tons)} × ${num(v.tonTrips)} × ${money(v.unitPrice ?? 0)} =<br><span class="month-amount-result">${money(tonAmount)}</span>`:(tripAmount>0?`${money(v.tripPrice ?? 0)} × ${num(v.trips)} =<br><span class="month-amount-result">${money(tripAmount)}</span>`:"")}).join("<br>");return `<tr><td>${esc(x.date)}</td><td>${esc(x.place)}</td><td>${tonsText}</td><td>${z.trips}</td><td>${amountText}</td><td>${money(z.percentAmount)}</td><td>${a.map(v=>`${esc(v.expenseItem||"未填項目")} ${money(v.expense)}元`).join("<br>")}</td><td>${a.map(v=>`${esc(v.incomeItem||"未填項目")} ${money(v.manualIncome)}元`).join("<br>")}</td></tr>`}).join("");
+ $("placeTable").innerHTML=`<tr><th>日期</th><th>地點</th><th>噸數</th><th>總車趟</th><th>金額</th><th>％計算金額</th><th>支出項目／金額</th><th>收入項目／金額</th></tr>${rows||'<tr><td colspan="8" class="empty">本月沒有資料</td></tr>'}<tr><th></th><th>本月總計</th><th>總噸數<br><span class="month-total-tons">${c.tons.toFixed(2)}</span></th><th>總車趟<br>${money(c.trips)}</th><th>總金額<br><span class="month-total-amount">${money(c.amount)}</span></th><th>總％計算金額<br>${money(c.percentAmount)}</th><th></th><th></th></tr>`;
 }
 function renderYear(){
  const y=String($("yearPicker").value), arr=data.filter(x=>x.date.startsWith(y+"-")), c=calc(arr);$("yearSummary").innerHTML=summaryHTML(c);
