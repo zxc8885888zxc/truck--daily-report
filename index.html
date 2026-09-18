@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
-<meta name="app-version" content="20260919-percent-red-bold-v7">
+<meta name="app-version" content="20260919-year-ton-percent-v8">
 <title>🚚 車趟日報｜每日使用版</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f3f4f6;color:#111827;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC",sans-serif}
@@ -17,7 +17,7 @@ h2{font-size:17px;margin:0 0 12px}.grid{display:grid;grid-template-columns:1fr 1
 .tablewrap{overflow:auto}.table{width:100%;border-collapse:collapse;font-size:13px;min-width:650px}.table th,.table td{padding:9px 7px;border-bottom:1px solid #e5e7eb;text-align:right}.table th:first-child,.table td:first-child,.table th:nth-child(3),.table td:nth-child(3){text-align:left}.table th{background:#f9fafb}
 .item{border:1px solid #e5e7eb;border-radius:13px;padding:11px;margin-top:9px}.itemtop{display:flex;justify-content:space-between;gap:8px}.muted{color:#6b7280;font-size:13px}.profit{font-weight:800}.empty{text-align:center;color:#6b7280;padding:25px 8px}
 .note{font-size:12px;color:#6b7280;line-height:1.6}.hidden{display:none!important}
-.month-amount-result{color:#000;font-weight:900;font-size:17px}.month-total-tons{color:#000;font-weight:700;font-size:18px}.month-total-amount{color:#000;font-weight:900;font-size:18px}.month-total-percent{color:#dc2626;font-weight:900;font-size:18px}.month-summary-strong{color:#000;font-weight:900!important}.month-summary-percent{color:#dc2626!important;font-weight:900!important}
+.month-amount-result{color:#000;font-weight:900;font-size:17px}.month-total-tons{color:#000;font-weight:700;font-size:18px}.month-total-amount{color:#000;font-weight:900;font-size:18px}.month-total-percent{color:#dc2626;font-weight:900;font-size:18px}.month-summary-strong{color:#000;font-weight:900!important}.month-summary-percent{color:#dc2626!important;font-weight:900!important}#yearSummary .metric:nth-child(4) b{color:#dc2626;font-weight:900}.year-percent{color:#dc2626;font-weight:800}
 @media(min-width:600px){.summary{grid-template-columns:repeat(3,1fr)}}
 </style>
 </head>
@@ -153,9 +153,9 @@ function renderMonth(){
  $("placeTable").innerHTML=`<tr><th>日期</th><th>地點</th><th>噸數</th><th>總車趟</th><th>金額</th><th>％計算金額</th><th>支出項目／金額</th><th>收入項目／金額</th></tr>${rows||'<tr><td colspan="8" class="empty">本月沒有資料</td></tr>'}<tr><th></th><th>本月總計</th><th>總噸數<br><span class="month-total-tons">${c.tons.toFixed(2)}</span></th><th>總車趟<br>${money(c.trips)}</th><th>總金額<br><span class="month-total-amount">${money(c.amount)}</span></th><th>總％計算金額<br><span class="month-total-percent">${money(c.percentAmount)}</span></th><th></th><th></th></tr>`;
 }
 function renderYear(){
- const y=String($("yearPicker").value), arr=data.filter(x=>x.date.startsWith(y+"-")), c=calc(arr);$("yearSummary").innerHTML=summaryHTML(c);
- let rows="";for(let i=1;i<=12;i++){let m=`${y}-${String(i).padStart(2,"0")}`,a=data.filter(x=>x.date.startsWith(m)),z=calc(a);rows+=`<tr><td>${i}月</td><td>${z.tons.toFixed(2)}</td><td>${z.trips}</td><td>${money(z.amount)}</td><td>${money(z.percentAmount)}</td><td>${a.map(x=>`${esc(x.expenseItem||"未填項目")} ${money(x.expense)}元`).join("<br>")}</td><td>${a.map(x=>`${esc(x.incomeItem||"未填項目")} ${money(x.manualIncome)}元`).join("<br>")}</td></tr>`}
- $("yearTable").innerHTML=`<tr><th>月份</th><th>噸數</th><th>車趟</th><th>金額</th><th>％計算金額</th><th>支出項目／金額</th><th>收入項目／金額</th></tr>${rows}<tr><th>全年</th><th>${c.tons.toFixed(2)}</th><th>${c.trips}</th><th>${money(c.amount)}</th><th>${money(c.percentAmount)}</th><th>${arr.map(x=>`${esc(x.expenseItem||"未填項目")} ${money(x.expense)}元`).join("<br>")}</th><th>${arr.map(x=>`${esc(x.incomeItem||"未填項目")} ${money(x.manualIncome)}元`).join("<br>")}</th></tr>`;
+ const y=String($("yearPicker").value), arr=data.filter(x=>x.date.startsWith(y+"-")), c=calc(arr);c.tons=arr.reduce((s,x)=>s+num(x.tons)*num(x.tonTrips),0);$("yearSummary").innerHTML=summaryHTML(c);
+ let rows="";for(let i=1;i<=12;i++){let m=`${y}-${String(i).padStart(2,"0")}`,a=data.filter(x=>x.date.startsWith(m)),z=calc(a);z.tons=a.reduce((s,x)=>s+num(x.tons)*num(x.tonTrips),0);rows+=`<tr><td>${i}月</td><td>${z.tons.toFixed(2)}</td><td>${z.trips}</td><td>${money(z.amount)}</td><td class="year-percent">${money(z.percentAmount)}</td><td>${a.map(x=>`${esc(x.expenseItem||"未填項目")} ${money(x.expense)}元`).join("<br>")}</td><td>${a.map(x=>`${esc(x.incomeItem||"未填項目")} ${money(x.manualIncome)}元`).join("<br>")}</td></tr>`}
+ $("yearTable").innerHTML=`<tr><th>月份</th><th>噸數</th><th>車趟</th><th>金額</th><th>％計算金額</th><th>支出項目／金額</th><th>收入項目／金額</th></tr>${rows}<tr><th>全年</th><th>${c.tons.toFixed(2)}</th><th>${c.trips}</th><th>${money(c.amount)}</th><th class="year-percent">${money(c.percentAmount)}</th><th>${arr.map(x=>`${esc(x.expenseItem||"未填項目")} ${money(x.expense)}元`).join("<br>")}</th><th>${arr.map(x=>`${esc(x.incomeItem||"未填項目")} ${money(x.manualIncome)}元`).join("<br>")}</th></tr>`;
 }
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function renderAll(){renderDaily();renderMonth();renderYear()}
