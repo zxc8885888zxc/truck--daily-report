@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
-<meta name="app-version" content="20260918-percent-fix">
+<meta name="app-version" content="20260918-tontrips-monthbottom">
 <title>🚚 車趟日報｜每日使用版</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f3f4f6;color:#111827;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC",sans-serif}
@@ -36,8 +36,9 @@ h2{font-size:17px;margin:0 0 12px}.grid{display:grid;grid-template-columns:1fr 1
 <div class="grid">
 <label>日期<input id="date" type="date"></label>
 <label class="full">地點<input id="place" type="text" placeholder="例如 台北港"></label>
-<label>總噸數<input id="tons" type="number" min="0" step="0.01" placeholder="例如 23"></label>
-<label>車趟<input id="trips" type="number" min="0" step="1" value="1"></label>
+<label>噸數<input id="tons" type="number" min="0" step="0.01" placeholder="例如 23"></label>
+<label>噸車趟<input id="tonTrips" type="number" min="0" step="1" value="0"></label>
+<label>每車趟<input id="trips" type="number" min="0" step="1" value="1"></label>
 <label>每噸單價<input id="unitPrice" type="number" min="0" step="1" placeholder="例如 150"></label>
 <label>每車趟單價<input id="tripPrice" type="number" min="0" step="1" placeholder="例如 3000"></label>
 <label class="full">運費總金額％<input id="amountPercent" type="number" min="0" step="0.01" placeholder="例如 10"></label>
@@ -59,8 +60,8 @@ h2{font-size:17px;margin:0 0 12px}.grid{display:grid;grid-template-columns:1fr 1
 <section id="monthly" class="hidden">
 <div class="card"><h2>每月統計</h2><label>選擇月份<input id="monthPicker" type="month"></label>
 <div class="row" style="margin-top:10px"><button class="btn secondary" id="monthBackup">💾 備份全部資料</button><button class="btn secondary" id="monthRestore">📥 匯入／還原備份</button></div></div>
-<div class="card"><div class="summary" id="monthSummary"></div></div>
 <div class="card"><h2>該月地點統計</h2><div class="tablewrap"><table class="table" id="placeTable"></table></div></div>
+<div class="card"><h2>本月總計</h2><div class="summary" id="monthSummary"></div></div>
 </section>
 
 <section id="yearly" class="hidden">
@@ -100,23 +101,27 @@ document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{
  renderAll();
 });
 function calc(arr){
- return {tons:arr.reduce((s,x)=>s+num(x.tons),0),trips:arr.reduce((s,x)=>s+num(x.trips),0),
+ return {tons:arr.reduce((s,x)=>s+num(x.tons),0),trips:arr.reduce((s,x)=>s+num(x.tonTrips)+num(x.trips),0),
  amount:arr.reduce((s,x)=>s+num(x.amount),0),percentAmount:arr.reduce((s,x)=>s+num(x.percentAmount),0)};
 }
 function summaryHTML(c){
  return [["總噸數",c.tons.toFixed(2)+" 噸"],["總車趟",money(c.trips)+" 趟"],["運費總金額",money(c.amount)+" 元"],["％計算金額",money(c.percentAmount)+" 元"]]
  .map(([a,b])=>`<div class="metric"><span>${a}</span><b>${b}</b></div>`).join("");
 }
+function monthSummaryHTML(c){
+ return [["總噸數",c.tons.toFixed(2)+" 噸"],["總車趟",money(c.trips)+" 趟"],["總金額",money(c.amount)+" 元"],["總％計算金額",money(c.percentAmount)+" 元"]]
+ .map(([a,b])=>`<div class="metric"><span>${a}</span><b>${b}</b></div>`).join("");
+}
 $("save").onclick=()=>{
- const date=$("date").value, place=$("place").value.trim(), tons=num($("tons").value), trips=num($("trips").value), unitPrice=num($("unitPrice").value), tripPrice=num($("tripPrice").value), expenseItem=$("expenseItem").value.trim(), expense=num($("expense").value), incomeItem=$("incomeItem").value.trim(), manualIncome=num($("manualIncome").value), amountPercent=num($("amountPercent").value), amount=unitPrice*tons+tripPrice*trips, percentAmount=amount*amountPercent/100;
+ const date=$("date").value, place=$("place").value.trim(), tons=num($("tons").value), tonTrips=num($("tonTrips").value), trips=num($("trips").value), unitPrice=num($("unitPrice").value), tripPrice=num($("tripPrice").value), expenseItem=$("expenseItem").value.trim(), expense=num($("expense").value), incomeItem=$("incomeItem").value.trim(), manualIncome=num($("manualIncome").value), amountPercent=num($("amountPercent").value), amount=unitPrice*tons+tripPrice*trips, percentAmount=amount*amountPercent/100;
  if(!date||!place){alert("請至少填寫日期與地點");return}
- if(trips<0||tons<0||unitPrice<0||tripPrice<0||expense<0||manualIncome<0||amountPercent<0){alert("數字不能小於 0");return}
- data.push({id:Date.now(),date,place,tons,trips,unitPrice,tripPrice,amount,amountPercent,percentAmount,expenseItem,expense,incomeItem,manualIncome});
+ if(trips<0||tonTrips<0||tons<0||unitPrice<0||tripPrice<0||expense<0||manualIncome<0||amountPercent<0){alert("數字不能小於 0");return}
+ data.push({id:Date.now(),date,place,tons,tonTrips,trips,unitPrice,tripPrice,amount,amountPercent,percentAmount,expenseItem,expense,incomeItem,manualIncome});
  data.sort((a,b)=>a.date.localeCompare(b.date)||a.id-b.id);saveData();
- $("place").value="";$("tons").value="";$("unitPrice").value="";$("tripPrice").value="";$("amountPercent").value="";$("expenseItem").value="";$("expense").value="";$("incomeItem").value="";$("manualIncome").value="";
+ $("place").value="";$("tons").value="";$("tonTrips").value=0;$("unitPrice").value="";$("tripPrice").value="";$("amountPercent").value="";$("expenseItem").value="";$("expense").value="";$("incomeItem").value="";$("manualIncome").value="";
  renderAll();
 };
-$("clear").onclick=()=>{["place","tons","unitPrice","tripPrice","amountPercent","expenseItem","expense","incomeItem","manualIncome"].forEach(x=>$(x).value="");$("date").value=today();$("trips").value=1};
+$("clear").onclick=()=>{["place","tons","unitPrice","tripPrice","amountPercent","expenseItem","expense","incomeItem","manualIncome"].forEach(x=>$(x).value="");$("date").value=today();$("tonTrips").value=0;$("trips").value=1};
 
 function renderDaily(){
  const d=$("date").value||today(), arr=data.filter(x=>x.date===d), c=calc(arr);
@@ -124,14 +129,14 @@ function renderDaily(){
  if(!arr.length){$("records").innerHTML='<div class="empty">這天還沒有紀錄</div>';return}
  $("records").innerHTML=arr.map(x=>`<div class="item">
  <div class="itemtop"><b>${esc(x.place)}</b><div class="row" style="flex:0 0 auto"><button class="btn secondary" onclick="edit(${x.id})">修改</button><button class="btn danger" onclick="del(${x.id})">刪除</button></div></div>
- <div class="muted">噸數 ${x.tons.toFixed(2)} 噸　每噸單價 ${money(x.unitPrice ?? 0)} 元／噸　車趟 ${x.trips}　每車趟單價 ${money(x.tripPrice ?? 0)} 元／趟　運費總金額 ${money(x.amount)} 元　${num(x.amountPercent)}%＝${money(x.percentAmount)} 元</div>
+ <div class="muted">噸數 ${x.tons.toFixed(2)} 噸　噸車趟 ${num(x.tonTrips)}　每噸單價 ${money(x.unitPrice ?? 0)} 元／噸　每車趟 ${x.trips}　每車趟單價 ${money(x.tripPrice ?? 0)} 元／趟　運費總金額 ${money(x.amount)} 元　${num(x.amountPercent)}%＝${money(x.percentAmount)} 元</div>
  <div class="muted">支出：${esc(x.expenseItem||"未填項目")}　${money(x.expense)} 元</div>
  <div class="muted">收入：${esc(x.incomeItem||"未填項目")}　${money(x.manualIncome)} 元</div></div>`).join("");
 }
 function del(id){if(confirm("確定刪除這筆紀錄？")){data=data.filter(x=>x.id!==id);saveData();renderAll()}}
 function edit(id){
  const x=data.find(v=>v.id===id); if(!x)return;
- $("date").value=x.date;$("place").value=x.place;$("tons").value=x.tons;$("trips").value=x.trips;$("unitPrice").value=x.unitPrice ?? 0;$("tripPrice").value=x.tripPrice ?? 0;$("amountPercent").value=x.amountPercent ?? "";$("expenseItem").value=x.expenseItem ?? "";$("expense").value=x.expense ?? 0;$("incomeItem").value=x.incomeItem ?? "";$("manualIncome").value=x.manualIncome ?? "";
+ $("date").value=x.date;$("place").value=x.place;$("tons").value=x.tons;$("tonTrips").value=x.tonTrips ?? 0;$("trips").value=x.trips;$("unitPrice").value=x.unitPrice ?? 0;$("tripPrice").value=x.tripPrice ?? 0;$("amountPercent").value=x.amountPercent ?? "";$("expenseItem").value=x.expenseItem ?? "";$("expense").value=x.expense ?? 0;$("incomeItem").value=x.incomeItem ?? "";$("manualIncome").value=x.manualIncome ?? "";
  data=data.filter(v=>v.id!==id);saveData();renderAll();window.scrollTo({top:0,behavior:"smooth"});
 }
 function shiftDate(days){
@@ -141,10 +146,10 @@ function shiftDate(days){
 $("prevDay").onclick=()=>shiftDate(-1);$("nextDay").onclick=()=>shiftDate(1);
 $("todayBtn").onclick=()=>{$("date").value=today();renderDaily()};
 function renderMonth(){
- const m=$("monthPicker").value, arr=data.filter(x=>x.date.startsWith(m)), c=calc(arr);$("monthSummary").innerHTML=summaryHTML(c);
+ const m=$("monthPicker").value, arr=data.filter(x=>x.date.startsWith(m)), c=calc(arr);$("monthSummary").innerHTML=monthSummaryHTML(c);
  const map={};arr.forEach(x=>{map[x.place]??=[];map[x.place].push(x)});
  let rows=Object.entries(map).sort((a,b)=>b[1].reduce((s,x)=>s+x.amount,0)-a[1].reduce((s,x)=>s+x.amount,0)).map(([p,a])=>{let c=calc(a);return `<tr><td>${esc(p)}</td><td>${c.tons.toFixed(2)}</td><td>${c.trips}</td><td>${money(c.amount)}</td><td>${money(c.percentAmount)}</td><td>${a.map(x=>`${esc(x.expenseItem||"未填項目")} ${money(x.expense)}元`).join("<br>")}</td><td>${a.map(x=>`${esc(x.incomeItem||"未填項目")} ${money(x.manualIncome)}元`).join("<br>")}</td></tr>`}).join("");
- $("placeTable").innerHTML=`<tr><th>地點</th><th>噸數</th><th>車趟</th><th>金額</th><th>％計算金額</th><th>支出項目／金額</th><th>收入項目／金額</th></tr>${rows||'<tr><td colspan="7" class="empty">本月沒有資料</td></tr>'}`;
+ $("placeTable").innerHTML=`<tr><th>地點</th><th>噸數</th><th>總車趟</th><th>金額</th><th>％計算金額</th><th>支出項目／金額</th><th>收入項目／金額</th></tr>${rows||'<tr><td colspan="7" class="empty">本月沒有資料</td></tr>'}`;
 }
 function renderYear(){
  const y=String($("yearPicker").value), arr=data.filter(x=>x.date.startsWith(y+"-")), c=calc(arr);$("yearSummary").innerHTML=summaryHTML(c);
