@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=1280,initial-scale=0.3,minimum-scale=0.2,maximum-scale=3,user-scalable=yes,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
-<meta name="app-version" content="20260919-full-layout-v2">
+<meta name="app-version" content="20260919-full-layout-v3">
 <title>🚚 車趟日報｜完整排版獨立版</title>
 <style>
 *{box-sizing:border-box}
@@ -125,6 +125,15 @@ html,body{min-height:100%;background:#eef8ff!important}
 body:after{content:"";position:fixed;inset:0;z-index:-1;background:linear-gradient(180deg,#f8fcff 0%,#eef8ff 100%)}
 .percent-control{background:#fff7df!important;border:1px solid #f1d36a!important;border-radius:7px;padding:6px!important;color:#9a5a00!important}
 .percent-control input{background:#fff!important;border:2px solid #efb42d!important;font-weight:950!important;color:#d71920!important}
+
+/* 手機畫面：內容結束後也延續同一底色，整個可視區不出現白色空白 */
+html{height:100%!important;background:#eef8ff!important}
+body{margin:0!important;min-height:100vh!important;background:#eef8ff!important}
+body,main,header{background-color:#eef8ff}
+main{margin-bottom:0!important}
+.dashboard-bottom{margin-bottom:0!important}
+.layout-footer{margin-bottom:0!important}
+@supports(height:100dvh){body{min-height:100dvh!important}}
 </style>
 </head>
 <body>
