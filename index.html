@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
-<meta name="app-version" content="20260919-place-date-detail-v3">
+<meta name="app-version" content="20260919-ton-amount-display-v4">
 <title>🚚 車趟日報｜每日使用版</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f3f4f6;color:#111827;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC",sans-serif}
@@ -148,7 +148,7 @@ $("todayBtn").onclick=()=>{$("date").value=today();renderDaily()};
 function renderMonth(){
  const m=$("monthPicker").value, arr=data.filter(x=>x.date.startsWith(m)), c=calc(arr);c.tons=arr.reduce((s,x)=>s+num(x.tons)*num(x.tonTrips),0);$("monthSummary").innerHTML=monthSummaryHTML(c);
   const map={};arr.forEach(x=>{const k=x.date+"|||"+x.place;map[k]??=[];map[k].push(x)});
- let rows=Object.entries(map).sort((a,b)=>a[1][0].date.localeCompare(b[1][0].date)||a[1][0].place.localeCompare(b[1][0].place)).map(([k,a])=>{let z=calc(a),x=a[0],tonsText=a.map(v=>`${num(v.tons)} × ${num(v.tonTrips)}`).join("<br>"),amountText=a.map(v=>`${money(v.tripPrice ?? 0)} × ${num(v.trips)}`).join("<br>");return `<tr><td>${esc(x.date)}</td><td>${esc(x.place)}</td><td>${tonsText}</td><td>${z.trips}</td><td>${amountText}</td><td>${money(z.percentAmount)}</td><td>${a.map(v=>`${esc(v.expenseItem||"未填項目")} ${money(v.expense)}元`).join("<br>")}</td><td>${a.map(v=>`${esc(v.incomeItem||"未填項目")} ${money(v.manualIncome)}元`).join("<br>")}</td></tr>`}).join("");
+ let rows=Object.entries(map).sort((a,b)=>a[1][0].date.localeCompare(b[1][0].date)||a[1][0].place.localeCompare(b[1][0].place)).map(([k,a])=>{let z=calc(a),x=a[0],tonsText=a.map(v=>`${num(v.tons)} × ${num(v.tonTrips)}`).join("<br>"),amountText=a.map(v=>{const tonAmount=num(v.tons)*num(v.tonTrips)*num(v.unitPrice);return tonAmount>0?money(tonAmount):`${money(v.tripPrice ?? 0)} × ${num(v.trips)}`}).join("<br>");return `<tr><td>${esc(x.date)}</td><td>${esc(x.place)}</td><td>${tonsText}</td><td>${z.trips}</td><td>${amountText}</td><td>${money(z.percentAmount)}</td><td>${a.map(v=>`${esc(v.expenseItem||"未填項目")} ${money(v.expense)}元`).join("<br>")}</td><td>${a.map(v=>`${esc(v.incomeItem||"未填項目")} ${money(v.manualIncome)}元`).join("<br>")}</td></tr>`}).join("");
  $("placeTable").innerHTML=`<tr><th>日期</th><th>地點</th><th>噸數</th><th>總車趟</th><th>金額</th><th>％計算金額</th><th>支出項目／金額</th><th>收入項目／金額</th></tr>${rows||'<tr><td colspan="8" class="empty">本月沒有資料</td></tr>'}<tr><th></th><th>本月總計</th><th>總噸數<br>${c.tons.toFixed(2)}</th><th>總車趟<br>${money(c.trips)}</th><th>總金額<br>${money(c.amount)}</th><th>總％計算金額<br>${money(c.percentAmount)}</th><th></th><th></th></tr>`;
 }
 function renderYear(){
