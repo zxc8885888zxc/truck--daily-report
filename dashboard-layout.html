@@ -2,10 +2,10 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=1280,initial-scale=0.3,minimum-scale=0.2,maximum-scale=3,user-scalable=yes,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
-<meta name="app-version" content="20260919-layout-save-v1">
-<title>🚚 車趟日報｜三欄排版存檔版</title>
+<meta name="app-version" content="20260919-layout-reference-v2">
+<title>🚚 車趟日報｜指定排版存檔版</title>
 <style>
 *{box-sizing:border-box}
 :root{--navy:#12356b;--blue:#1687ee;--green:#12a454;--gold:#a86b00;--red:#ef2020;--ink:#13213a;--muted:#687386;--line:#d8e2ee}
@@ -84,6 +84,16 @@ input:focus,select:focus{border-color:#1687ee;box-shadow:0 0 0 3px #d9efff}
 @media(max-width:999px){
   .dashboard-head{align-items:flex-start}.head-actions{gap:4px}.head-actions button{min-width:50px;padding:6px;font-size:12px}
   .dashboard-bottom{grid-template-columns:1fr 1fr}.finance-card{grid-column:1/-1}.layout-footer{grid-column:1/-1}
+}
+
+/* 指定圖片排版：每日／每月／年度三欄同時顯示；底部為支出收入與總計卡 */
+main>section.hidden{display:block!important}
+@media(min-width:1000px){
+ .dashboard-head>.brand{max-width:none;margin:0}
+ main{grid-template-columns:1fr 1fr 1fr!important}
+ main>section{display:block!important}
+ main>section.hidden{display:block!important}
+ .dashboard-bottom{grid-template-columns:1.45fr repeat(4,.72fr)!important}
 }
 </style>
 </head>
