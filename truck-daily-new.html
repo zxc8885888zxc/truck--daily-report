@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1280,initial-scale=0.3,minimum-scale=0.2,maximum-scale=3,user-scalable=yes,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<meta name="app-version" content="20260919-home-new-v1">
+<title>🚚 車趟日報</title>
+<style>
+*{box-sizing:border-box}
+:root{--navy:#12356b;--blue:#1687ee;--green:#12a454;--gold:#a86b00;--red:#ef2020;--ink:#13213a;--muted:#687386;--line:#d8e2ee}
+body{margin:0;background:#f6f9fc;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC",sans-serif}
+header{position:sticky;top:0;z-index:8;background:rgba(255,255,255,.97);color:var(--navy);padding:12px 14px 10px;padding-top:calc(12px + env(safe-area-inset-top));box-shadow:0 3px 14px #1e3a5f18;border-bottom:1px solid #dbe6f2}
+.brand{display:flex;align-items:center;gap:9px;margin-bottom:10px}.brand-icon{font-size:35px;line-height:1}.brand-copy h1{font-size:25px;margin:0;font-weight:950;letter-spacing:.5px}.brand-copy p{margin:2px 0 0;font-size:12px;color:#52647d;font-weight:700}
+.tabs{display:flex;gap:5px;border:1px solid #d7e1ec;border-radius:11px;overflow:hidden;background:#f8fafc}
+.tabs button{flex:1;border:0;padding:11px 4px;background:#fff;color:#17355e;font-weight:900;font-size:14px}
+.tabs button.active{background:linear-gradient(135deg,#1989ef,#0878e2);color:#fff}
+main{max-width:900px;margin:auto;padding:13px 10px 42px}
+.card{background:#fff;border:1px solid var(--line);border-radius:13px;padding:13px;margin-bottom:11px;box-shadow:0 2px 9px #17355e0d}
+#daily .card{background:linear-gradient(180deg,#f8fdff,#edf8ff);border-color:#bfe3fb}
+#monthly .card{background:linear-gradient(180deg,#fbfffc,#edfff4);border-color:#bfe9ca}
+#yearly .card{background:linear-gradient(180deg,#fffdf7,#fff8df);border-color:#f2dda0}
+h2{font-size:18px;margin:0 0 11px;font-weight:950;color:#12356b}
+#monthly h2{color:#137a37}#yearly h2{color:#835000}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+label{font-size:13px;font-weight:900;color:#20334f}
+input,select{width:100%;margin-top:5px;border:1.5px solid #c9d6e4;border-radius:8px;padding:10px;font-size:16px;background:#fff;color:#172033;outline:none}
+input:focus,select:focus{border-color:#1687ee;box-shadow:0 0 0 3px #d9efff}
+.full{grid-column:1/-1}
+.btn{border:0;border-radius:9px;padding:11px 12px;font-weight:900;font-size:14px;cursor:pointer}
+.primary{background:linear-gradient(135deg,#16b75c,#0b9b4c);color:#fff}
+.secondary{background:#e9eef5;color:#24364e;border:1px solid #d4dde8}
+.danger{background:#fff0f0;color:#d51f32;border:1px solid #ffd0d5}
+.row{display:flex;gap:7px;flex-wrap:wrap}.row>*{flex:1}
+.summary{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.metric{background:#fff;border:1px solid #d9e3ee;border-radius:9px;padding:10px;text-align:center}
+.metric:nth-child(1){background:#edf7ff;border-color:#c9e7fb}.metric:nth-child(2){background:#effcf4;border-color:#c8efd6}.metric:nth-child(3){background:#fff1f5;border-color:#f6ceda}.metric:nth-child(4){background:#fff9e7;border-color:#f3dfa3}
+.metric b{display:block;font-size:20px;margin-top:3px;font-weight:950}.metric span{font-size:12px;color:#59697f;font-weight:900}
+.tablewrap{overflow:auto;border:1px solid #d7e2ed;border-radius:8px;background:#fff}
+.table{width:100%;border-collapse:collapse;font-size:13px;min-width:650px}
+.table th,.table td{padding:9px 7px;border-right:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;text-align:right;white-space:nowrap}
+.table th:first-child,.table td:first-child,.table th:nth-child(3),.table td:nth-child(3){text-align:left}
+.table th{background:#e8f2ff;color:#15355f;font-weight:950}
+#monthly .table th{background:#e9f9ef;color:#176c35}
+#yearly .table th{background:#fff5d9;color:#805000}
+.table tr:last-child th{font-size:14px;background:#e8f2ff;border-top:2px solid #8ec9f6}
+.item{border:1px solid #cfe0ee;border-radius:10px;padding:10px;margin-top:8px;background:#fff}
+.itemtop{display:flex;justify-content:space-between;gap:8px}.muted{color:#617087;font-size:13px;line-height:1.6}.profit{font-weight:900}.empty{text-align:center;color:#6b7280;padding:24px 8px}
+.note{font-size:12px;color:#637187;line-height:1.65;background:#ffffffa8;border-radius:8px;padding:8px}.hidden{display:none!important}
+.month-amount-result{color:#000;font-weight:900;font-size:17px}.month-total-tons{color:#000;font-weight:700;font-size:18px}.month-total-amount{color:#000;font-weight:900;font-size:18px}.month-total-percent{color:#dc2626;font-weight:900;font-size:18px}.month-summary-strong{color:#000;font-weight:900!important}.month-summary-percent{color:#dc2626!important;font-weight:900!important}
+#yearSummary .metric:nth-child(4) b{color:#dc2626;font-weight:950}.year-percent{color:#dc2626;font-weight:900}
+@media(min-width:700px){.summary{grid-template-columns:repeat(4,1fr)}}
+@media(min-width:1000px){
+ header{position:relative;padding-left:22px;padding-right:22px}
+ .brand{max-width:1450px;margin:0 auto 12px}
+ .tabs{max-width:1450px;margin:0 auto}
+ main{max-width:1480px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;align-items:start;padding:14px 12px 34px}
+ main>section{display:block!important;min-width:0}
+ #daily,#monthly,#yearly{grid-column:auto}
+ .card{margin-bottom:10px}
+ .grid{grid-template-columns:1fr 1fr}
+ .summary{grid-template-columns:repeat(2,1fr)}
+ .table{min-width:620px}
+ .tablewrap{max-height:520px}
+ #daily .card:first-child{border-top:4px solid #1687ee}
+ #monthly .card:first-child{border-top:4px solid #16a34a}
+ #yearly .card:first-child{border-top:4px solid #d08a00}
+}
+
+@media(max-width:430px){.brand-copy h1{font-size:22px}.brand-icon{font-size:31px}.tabs button{font-size:13px;padding:10px 2px}.card{padding:11px}.grid{gap:7px}.metric b{font-size:18px}}
+
+.dashboard-head{display:flex;justify-content:space-between;align-items:center;gap:12px;max-width:1450px;margin:auto}
+.head-actions{display:flex;gap:7px}.head-actions button{border:1px solid #d5e0eb;background:#fff;border-radius:9px;padding:7px 11px;font-weight:900;color:#17355e;min-width:66px}.head-actions span{display:block;font-size:12px;margin-top:2px}
+.dashboard-bottom{max-width:1450px;margin:0 auto 24px;padding:0 12px;display:grid;grid-template-columns:1.45fr repeat(4,.72fr);gap:10px}
+.finance-card,.dash-kpi{border:1px solid #d7e2ed;border-radius:12px;padding:11px;background:#fff}.finance-card{background:linear-gradient(180deg,#fff2f6,#ffedf3);border-color:#f3cbd6}.finance-card h2{color:#b4163d}.finance-cols{display:grid;grid-template-columns:1fr 1fr;gap:8px}.finance-cols>div>b{display:block;text-align:center;padding:5px;border-radius:6px;background:#fff}.finance-list{margin-top:5px;background:#fff;border:1px solid #dce5ed;border-radius:6px;padding:7px;min-height:58px;font-size:12px;line-height:1.6}
+.dash-kpi{text-align:center;display:flex;flex-direction:column;justify-content:center;min-height:145px}.dash-kpi span{font-weight:950}.dash-kpi strong{font-size:25px;margin:10px 0 2px}.dash-kpi small{font-weight:800}.dash-kpi.blue{background:#e9f6ff}.dash-kpi.green{background:#eafbf1}.dash-kpi.pink{background:#ffeaf1}.dash-kpi.gold{background:#fff8df}.dash-kpi.gold strong{color:#dc2626}
+.layout-footer{grid-column:1/-1;justify-self:center;text-align:center;background:#ffdce6;color:#bd1b49;border-radius:999px;padding:8px 28px;font-weight:900}
+@media(min-width:1000px){
+  #daily .card{background:linear-gradient(180deg,#f1fbff,#eaf7ff)}
+  #monthly .card{background:linear-gradient(180deg,#f1fff6,#eafaf0)}
+  #yearly .card{background:linear-gradient(180deg,#fffdf2,#fff8df)}
+  .tabs button{font-size:17px}
+}
+@media(max-width:999px){
+  .dashboard-head{align-items:flex-start}.head-actions{gap:4px}.head-actions button{min-width:50px;padding:6px;font-size:12px}
+  .dashboard-bottom{grid-template-columns:1fr 1fr}.finance-card{grid-column:1/-1}.layout-footer{grid-column:1/-1}
+}
+
+/* 指定圖片排版：每日／每月／年度三欄同時顯示；底部為支出收入與總計卡 */
+main>section.hidden{display:block!important}
+@media(min-width:1000px){
+ .dashboard-head>.brand{max-width:none;margin:0}
+ main{grid-template-columns:1fr 1fr 1fr!important}
+ main>section{display:block!important}
+ main>section.hidden{display:block!important}
+ .dashboard-bottom{grid-template-columns:1.45fr repeat(4,.72fr)!important}
+}
+
+/* ===== 參考圖排版 v3：只改版面，不改資料與公式 ===== */
+html{background:#f7fbff}
+body{min-width:1280px;background:linear-gradient(180deg,#f8fcff 0,#fff 100%);font-size:14px}
+header{position:relative!important;padding:10px 16px 8px!important;background:#fbfdff!important;box-shadow:none!important;border-bottom:0!important}
+.dashboard-head{max-width:1250px!important;height:82px;margin:0 auto!important;align-items:center!important}
+.dashboard-head>.brand{max-width:none!important;margin:0!important}
+.brand-icon{font-size:42px!important}.brand-copy h1{font-size:36px!important;line-height:1!important;letter-spacing:2px}.brand-copy p{font-size:16px!important;margin-top:7px!important}
+.head-actions{align-self:flex-start;margin-top:0;gap:10px!important}.head-actions button{width:78px;min-width:78px!important;height:70px;padding:7px 4px!important;font-size:22px!important;border-radius:9px!important;background:#fff!important}.head-actions button span{font-size:15px!important}
+.head-actions .danger-layout{width:92px!important;color:#d51d45!important;background:#fff3f6!important;border-color:#f3ccd6!important}
+.tabs{max-width:1250px!important;height:57px;margin:0 auto!important;gap:4px!important;border:0!important;background:transparent!important;overflow:visible!important}.tabs button{border:1px solid #cfdbe7!important;border-radius:9px!important;background:#fff!important;color:#102c55!important;font-size:20px!important}.tabs button.active{background:linear-gradient(135deg,#168bf2,#0877df)!important;color:#fff!important;border-color:#0877df!important}
+main{width:1250px!important;max-width:1250px!important;margin:0 auto!important;padding:10px 0 26px!important;display:grid!important;grid-template-columns:400px 400px 430px!important;gap:10px!important;align-items:start!important}
+main>section{display:block!important;min-width:0!important;border-radius:12px;padding:8px!important;border:1px solid #d7e3ed}main>section.hidden{display:block!important}
+#daily{background:linear-gradient(180deg,#effaff,#e7f7ff)!important;border-color:#c5e8f8!important}#monthly{background:linear-gradient(180deg,#f0fff5,#e8fbef)!important;border-color:#c7edd5!important}#yearly{background:linear-gradient(180deg,#fffdf0,#fff8dc)!important;border-color:#f1dfa4!important}
+.card{border:0!important;box-shadow:none!important;border-radius:8px!important;padding:7px!important;margin-bottom:7px!important;background:transparent!important}.card h2{font-size:20px!important;margin:0 0 8px!important}
+#daily>.card:first-child h2{font-size:0}#daily>.card:first-child h2:after{content:"🗓️ 每日統計";font-size:20px;color:#12356b}
+.grid{gap:5px!important;grid-template-columns:1fr 1fr!important}.grid label{font-size:13px!important;font-weight:900!important}.grid input{padding:7px 8px!important;font-size:14px!important;min-height:36px!important}
+.note{font-size:10px!important;line-height:1.35!important;margin:6px 0!important}.btn{padding:8px 9px!important;font-size:14px!important}#save{background:#0bad64!important}.inner-tools,.inner-note{display:none!important}
+.records-card{padding-top:2px!important}.records-card h2,.total-card h2{font-size:18px!important}.record{padding:7px!important;margin:5px 0!important;font-size:12px!important}
+.summary{grid-template-columns:repeat(4,1fr)!important;gap:0!important;border:1px solid #d4e0ea;border-radius:6px;overflow:hidden;background:#fff}.metric{border:0!important;border-right:1px solid #d4e0ea!important;border-radius:0!important;padding:7px 3px!important;background:#fff!important;min-width:0}.metric:last-child{border-right:0!important}.metric b{font-size:18px!important}.metric small{font-size:10px!important}
+.control-card{padding-bottom:3px!important}.control-card label{display:flex!important;align-items:center!important;justify-content:center!important;gap:8px;font-size:15px!important}.control-card input{width:180px!important;padding:8px!important;font-size:16px!important}
+.table-card{padding:0!important}.tablewrap{overflow:auto!important;max-height:none!important;border:1px solid #d6e0e9;border-radius:3px;background:#fff}.table{min-width:100%!important;width:100%!important;font-size:12px!important}.table th,.table td{padding:7px 5px!important;white-space:nowrap!important}.table th{background:#e9f0f7!important}#monthly .table th{background:#e4f1ea!important}#yearly .table th{background:#f0ead8!important}.total-card{margin-top:7px!important}
+.dashboard-bottom{grid-column:1/-1!important;width:1250px!important;max-width:1250px!important;margin:0!important;padding:0!important;display:grid!important;grid-template-columns:470px repeat(4,1fr)!important;gap:10px!important}.finance-card{padding:10px!important;min-height:170px!important;background:linear-gradient(180deg,#fff1f5,#ffeaf1)!important}.finance-card h2{font-size:20px!important;margin:0 0 7px!important}.finance-cols{gap:8px!important}.finance-list{min-height:70px!important}.dash-kpi{min-height:170px!important;border-radius:9px!important}.dash-kpi span{font-size:17px!important}.dash-kpi strong{font-size:27px!important}.layout-footer{grid-column:1/-1!important;justify-self:center!important;margin-top:0!important;padding:7px 40px!important;font-size:14px!important}
+@media(max-width:999px){body{min-width:1280px!important}main{display:grid!important}.dashboard-bottom{grid-template-columns:470px repeat(4,1fr)!important}}
+
+/* 完整獨立版：背景延伸到底，不留白；％數欄位明顯可調整 */
+html,body{min-height:100%;background:#eef8ff!important}
+body:after{content:"";position:fixed;inset:0;z-index:-1;background:linear-gradient(180deg,#f8fcff 0%,#eef8ff 100%)}
+.percent-control{background:#fff7df!important;border:1px solid #f1d36a!important;border-radius:7px;padding:6px!important;color:#9a5a00!important}
+.percent-control input{background:#fff!important;border:2px solid #efb42d!important;font-weight:950!important;color:#d71920!important}
+
+/* 手機畫面：內容結束後也延續同一底色，整個可視區不出現白色空白 */
+html{height:100%!important;background:#eef8ff!important}
+body{margin:0!important;min-height:100vh!important;background:#eef8ff!important}
+body,main,header{background-color:#eef8ff}
+main{margin-bottom:0!important}
+.dashboard-bottom{margin-bottom:0!important}
+.layout-footer{margin-bottom:0!important}
+@supports(height:100dvh){body{min-height:100dvh!important}}
+</style>
+</head>
+<body>
+<header>
+<div class="dashboard-head">
+  <div class="brand"><div class="brand-icon">🚚</div><div class="brand-copy"><h1>車趟日報</h1><p>記錄每一趟・累積每一份成果</p></div></div>
+  <div class="head-actions">
+    <button type="button" onclick="backupAll()">📄<span>備份</span></button>
+    <button type="button" onclick="openRestore()">↩️<span>還原</span></button>
+    <button type="button" onclick="document.getElementById('daily').scrollIntoView({behavior:'smooth'})">⚙️<span>設定</span></button><button type="button" class="danger-layout" onclick="alert('排版存檔版為保護原有資料，不會從這裡一鍵清除全部資料。')">🗑️<span>清除資料</span></button>
+  </div>
+</div>
+<div class="tabs">
+<button data-tab="daily" class="active">🗓️ 每日統計</button>
+<button data-tab="monthly">🗓️ 每月統計</button>
+<button data-tab="yearly">▥ 年度統計</button>
+</div>
+</header>
+<main>
+<section id="daily">
+<div class="card">
+<h2>新增每日紀錄</h2>
+<div class="grid">
+<label>日期<input id="date" type="date"></label>
+<label class="full">地點<input id="place" type="text" placeholder="例如 台北港"></label>
+<label>噸數<input id="tons" type="number" min="0" step="0.01" placeholder="例如 23"></label>
+<label>噸車趟<input id="tonTrips" type="number" min="0" step="1" value="0"></label>
+<label>每車趟<input id="trips" type="number" min="0" step="1" value="1"></label>
+<label>每噸單價<input id="unitPrice" type="number" min="0" step="1" placeholder="例如 150"></label>
+<label>每車趟單價<input id="tripPrice" type="number" min="0" step="1" placeholder="例如 3000"></label>
+<label class="full percent-control">％數（可調整）<input id="amountPercent" type="number" min="0" step="0.01" placeholder="例如 0.3"></label>
+<label>支出項目<input id="expenseItem" type="text" placeholder="例如 油錢"></label>
+<label>支出金額<input id="expense" type="number" min="0" step="1" placeholder="1500"></label>
+<label>收入項目<input id="incomeItem" type="text" placeholder="例如 其他收入"></label>
+<label>收入金額<input id="manualIncome" type="number" min="0" step="1" placeholder="1500"></label>
+</div>
+<p class="note">金額會自動計算：<b>噸數金額＝噸數 × 噸車趟 × 每噸單價</b>，<b>車趟金額＝每車趟單價 × 每車趟</b>；運費總金額＝噸數金額＋車趟金額。可輸入運費總金額％，例如輸入 0.3，系統以總金額 × 0.3 自動計算。支出與收入僅供自行記錄項目與金額，不參與自動加減。</p>
+<div class="row"><button class="btn primary" id="save">＋ 新增紀錄</button><button class="btn secondary" id="clear">清空</button></div><div class="row" style="margin-top:8px"><button class="btn secondary" id="prevDay">← 前一天</button><button class="btn secondary" id="todayBtn">今天</button><button class="btn secondary" id="nextDay">後一天 →</button></div>
+</div>
+
+<div class="card records-card"><h2>今日紀錄</h2><div id="records"></div></div>
+<div class="card total-card"><h2 id="dailyTitle">今日合計</h2><div class="summary" id="dailySummary"></div>
+<div class="row inner-tools" style="margin-top:10px"><button class="btn secondary" id="dailyBackup">💾 備份全部資料</button><button class="btn secondary" id="dailyRestore">📥 匯入／還原備份</button></div>
+<p class="note inner-note">建議定期按「立即備份全部資料」，把備份檔保存到 iPhone「檔案」或 iCloud。</p></div>
+</section>
+
+<section id="monthly" class="hidden">
+<div class="card control-card"><h2>🗓️ 每月統計</h2><label>選擇月份<input id="monthPicker" type="month"></label>
+<div class="row inner-tools" style="margin-top:10px"><button class="btn secondary" id="monthBackup">💾 備份全部資料</button><button class="btn secondary" id="monthRestore">📥 匯入／還原備份</button></div></div>
+<div class="card table-card"><div class="tablewrap"><table class="table" id="placeTable"></table></div></div>
+<div class="card total-card"><h2>本月合計</h2><div class="summary" id="monthSummary"></div></div>
+</section>
+
+<section id="yearly" class="hidden">
+<div class="card control-card"><h2>▥ 年度統計</h2><label>選擇年份<input id="yearPicker" type="number" min="2000" max="2100"></label>
+<div class="row inner-tools" style="margin-top:10px"><button class="btn secondary" id="yearBackup">💾 備份全部資料</button><button class="btn secondary" id="yearRestore">📥 匯入／還原備份</button></div></div>
+<div class="card table-card"><div class="tablewrap"><table class="table" id="yearTable"></table></div></div>
+<div class="card total-card"><h2>年度總計</h2><div class="summary" id="yearSummary"></div></div>
+<div class="card"><p class="note">資料只儲存在這支手機的瀏覽器本機。若清除瀏覽器網站資料，資料可能會消失；建議定期使用下方備份功能。</p>
+<div class="row"><button class="btn secondary" id="export">⬇️ 備份資料</button><button class="btn secondary" id="importBtn">⬆️ 還原資料</button><input id="file" type="file" accept=".json" class="hidden"></div></div>
+</section>
+
+<div class="dashboard-bottom">
+  <div class="finance-card">
+    <h2>🪙 支出・收入</h2>
+    <div class="finance-cols">
+      <div><b>支出明細</b><div id="layoutExpenseList" class="finance-list">尚無資料</div></div>
+      <div><b>收入明細</b><div id="layoutIncomeList" class="finance-list">尚無資料</div></div>
+    </div>
+  </div>
+  <div class="dash-kpi blue"><span>總噸數</span><strong id="layoutTons">0.00</strong><small>噸</small></div>
+  <div class="dash-kpi green"><span>總車趟</span><strong id="layoutTrips">0</strong><small>車趟</small></div>
+  <div class="dash-kpi pink"><span>總金額</span><strong id="layoutAmount">0</strong><small>元</small></div>
+  <div class="dash-kpi gold"><span>％ 計算金額</span><strong id="layoutPercent">0</strong><small>元</small></div>
+  <div class="layout-footer">♥ 堅持記錄・創造更好的明天<br><small>車趟日報・陪你走每一段路</small></div>
+</div>
+</main>
+<script>
+
+function localDateStr(d=new Date()){
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,"0");
+  const day=String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
+
+const KEY="truck_daily_report_v1";
+let data=JSON.parse(localStorage.getItem(KEY)||"[]");
+const $=id=>document.getElementById(id);
+const money=n=>Math.round(n||0).toLocaleString("zh-TW");
+const num=n=>Number(n||0);
+function saveData(){localStorage.setItem(KEY,JSON.stringify(data))}
+function today(){const d=new Date(),y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0");return `${y}-${m}-${day}`}
+function backupStamp(){
+  const d=new Date(),p=n=>String(n).padStart(2,"0");
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}_${p(d.getHours())}-${p(d.getMinutes())}-${p(d.getSeconds())}`;
+}
+$("date").value=today(); $("monthPicker").value=today().slice(0,7); $("yearPicker").value=new Date().getFullYear();
+
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{
+ document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));b.classList.add("active");
+ ["daily","monthly","yearly"].forEach(x=>$(x).classList.toggle("hidden",x!==b.dataset.tab));
+ renderAll();
+});
+function calc(arr){
+ return {tons:arr.reduce((s,x)=>s+num(x.tons),0),trips:arr.reduce((s,x)=>s+num(x.tonTrips)+num(x.trips),0),
+ amount:arr.reduce((s,x)=>s+num(x.amount),0),percentAmount:arr.reduce((s,x)=>s+num(x.amount)*num(x.amountPercent),0)};
+}
+function summaryHTML(c){
+ return [["總噸數",c.tons.toFixed(2)+" 噸"],["總車趟",money(c.trips)+" 趟"],["運費總金額",money(c.amount)+" 元"],["％計算金額",money(c.percentAmount)+" 元"]]
+ .map(([a,b])=>`<div class="metric"><span>${a}</span><b>${b}</b></div>`).join("");
+}
+function monthSummaryHTML(c){
+ return [["總噸數",c.tons.toFixed(2)+" 噸"],["總車趟",money(c.trips)+" 趟"],["總金額",money(c.amount)+" 元"],["總％計算金額",money(c.percentAmount)+" 元"]]
+ .map(([a,b])=>`<div class="metric"><span>${a}</span><b class="${a==="總％計算金額"?"month-summary-percent":(a==="總噸數"||a==="總金額"?"month-summary-strong":"")}">${b}</b></div>`).join("");
+}
+$("save").onclick=()=>{
+ const date=$("date").value, place=$("place").value.trim(), tons=num($("tons").value), tonTrips=num($("tonTrips").value), trips=num($("trips").value), unitPrice=num($("unitPrice").value), tripPrice=num($("tripPrice").value), expenseItem=$("expenseItem").value.trim(), expense=num($("expense").value), incomeItem=$("incomeItem").value.trim(), manualIncome=num($("manualIncome").value), amountPercent=num($("amountPercent").value), amount=unitPrice*tons*tonTrips+tripPrice*trips, percentAmount=amount*amountPercent;
+ if(!date||!place){alert("請至少填寫日期與地點");return}
+ if(trips<0||tonTrips<0||tons<0||unitPrice<0||tripPrice<0||expense<0||manualIncome<0||amountPercent<0){alert("數字不能小於 0");return}
+ data.push({id:Date.now(),date,place,tons,tonTrips,trips,unitPrice,tripPrice,amount,amountPercent,percentAmount,expenseItem,expense,incomeItem,manualIncome});
+ data.sort((a,b)=>a.date.localeCompare(b.date)||a.id-b.id);saveData();
+ $("place").value="";$("tons").value="";$("tonTrips").value=0;$("unitPrice").value="";$("tripPrice").value="";$("amountPercent").value="";$("expenseItem").value="";$("expense").value="";$("incomeItem").value="";$("manualIncome").value="";
+ renderAll();
+};
+$("clear").onclick=()=>{["place","tons","unitPrice","tripPrice","amountPercent","expenseItem","expense","incomeItem","manualIncome"].forEach(x=>$(x).value="");$("date").value=today();$("tonTrips").value=0;$("trips").value=1};
+
+function renderDaily(){
+ const d=$("date").value||today(), arr=data.filter(x=>x.date===d), c=calc(arr);
+ $("dailyTitle").textContent=d+" 統計";$("dailySummary").innerHTML=summaryHTML(c);
+ if(!arr.length){$("records").innerHTML='<div class="empty">這天還沒有紀錄</div>';return}
+ $("records").innerHTML=arr.map(x=>`<div class="item">
+ <div class="itemtop"><b>${esc(x.place)}</b><div class="row" style="flex:0 0 auto"><button class="btn secondary" onclick="edit(${x.id})">修改</button><button class="btn danger" onclick="del(${x.id})">刪除</button></div></div>
+ <div class="muted">噸數 ${x.tons.toFixed(2)} 噸　噸車趟 ${num(x.tonTrips)}　每噸單價 ${money(x.unitPrice ?? 0)} 元／噸　每車趟 ${x.trips}　每車趟單價 ${money(x.tripPrice ?? 0)} 元／趟　運費總金額 ${money(x.amount)} 元　${num(x.amountPercent)}％＝${money(num(x.amount)*num(x.amountPercent))} 元</div>
+ <div class="muted">支出：${esc(x.expenseItem||"未填項目")}　${money(x.expense)} 元</div>
+ <div class="muted">收入：${esc(x.incomeItem||"未填項目")}　${money(x.manualIncome)} 元</div></div>`).join("");
+}
+function del(id){if(confirm("確定刪除這筆紀錄？")){data=data.filter(x=>x.id!==id);saveData();renderAll()}}
+function edit(id){
+ const x=data.find(v=>v.id===id); if(!x)return;
+ $("date").value=x.date;$("place").value=x.place;$("tons").value=x.tons;$("tonTrips").value=x.tonTrips ?? 0;$("trips").value=x.trips;$("unitPrice").value=x.unitPrice ?? 0;$("tripPrice").value=x.tripPrice ?? 0;$("amountPercent").value=x.amountPercent ?? "";$("expenseItem").value=x.expenseItem ?? "";$("expense").value=x.expense ?? 0;$("incomeItem").value=x.incomeItem ?? "";$("manualIncome").value=x.manualIncome ?? "";
+ data=data.filter(v=>v.id!==id);saveData();renderAll();window.scrollTo({top:0,behavior:"smooth"});
+}
+function shiftDate(days){
+ const d=new Date(($("date").value||today())+"T12:00:00");d.setDate(d.getDate()+days);
+ $("date").value=localDateStr(d);renderDaily();
+}
+$("prevDay").onclick=()=>shiftDate(-1);$("nextDay").onclick=()=>shiftDate(1);
+$("todayBtn").onclick=()=>{$("date").value=today();renderDaily()};
+function renderMonth(){
+ const m=$("monthPicker").value, arr=data.filter(x=>x.date.startsWith(m)), c=calc(arr);c.tons=arr.reduce((s,x)=>s+num(x.tons)*num(x.tonTrips),0);$("monthSummary").innerHTML=monthSummaryHTML(c);
+  const map={};arr.forEach(x=>{const k=x.date+"|||"+x.place;map[k]??=[];map[k].push(x)});
+ let rows=Object.entries(map).sort((a,b)=>a[1][0].date.localeCompare(b[1][0].date)||a[1][0].place.localeCompare(b[1][0].place)).map(([k,a])=>{let z=calc(a),x=a[0],tonsText=a.map(v=>{const t=num(v.tons),tt=num(v.tonTrips);return t===0&&tt===0?"":`${t} × ${tt}`}).join("<br>"),amountText=a.map(v=>{const tonAmount=num(v.tons)*num(v.tonTrips)*num(v.unitPrice),tripAmount=num(v.tripPrice)*num(v.trips);return tonAmount>0?`${num(v.tons)} × ${num(v.tonTrips)} × ${money(v.unitPrice ?? 0)} =<br><span class="month-amount-result">${money(tonAmount)}</span>`:(tripAmount>0?`${money(v.tripPrice ?? 0)} × ${num(v.trips)} =<br><span class="month-amount-result">${money(tripAmount)}</span>`:"")}).join("<br>");return `<tr><td>${esc(x.date)}</td><td>${esc(x.place)}</td><td>${tonsText}</td><td>${z.trips}</td><td>${amountText}</td><td>${money(z.percentAmount)}</td><td>${a.map(v=>`${esc(v.expenseItem||"未填項目")} ${money(v.expense)}元`).join("<br>")}</td><td>${a.map(v=>`${esc(v.incomeItem||"未填項目")} ${money(v.manualIncome)}元`).join("<br>")}</td></tr>`}).join("");
+ $("placeTable").innerHTML=`<tr><th>日期</th><th>地點</th><th>噸數</th><th>總車趟</th><th>金額</th><th>％計算金額</th><th>支出項目／金額</th><th>收入項目／金額</th></tr>${rows||'<tr><td colspan="8" class="empty">本月沒有資料</td></tr>'}<tr><th></th><th>本月總計</th><th>總噸數<br><span class="month-total-tons">${c.tons.toFixed(2)}</span></th><th>總車趟<br>${money(c.trips)}</th><th>總金額<br><span class="month-total-amount">${money(c.amount)}</span></th><th>總％計算金額<br><span class="month-total-percent">${money(c.percentAmount)}</span></th><th></th><th></th></tr>`;
+}
+function renderYear(){
+ const y=String($("yearPicker").value), arr=data.filter(x=>x.date.startsWith(y+"-")), c=calc(arr);c.tons=arr.reduce((s,x)=>s+num(x.tons)*num(x.tonTrips),0);$("yearSummary").innerHTML=summaryHTML(c);
+ let rows="";for(let i=1;i<=12;i++){let m=`${y}-${String(i).padStart(2,"0")}`,a=data.filter(x=>x.date.startsWith(m)),z=calc(a);z.tons=a.reduce((s,x)=>s+num(x.tons)*num(x.tonTrips),0);rows+=`<tr><td>${i}月</td><td>${z.tons.toFixed(2)}</td><td>${z.trips}</td><td>${money(z.amount)}</td><td class="year-percent">${money(z.percentAmount)}</td><td>${a.map(x=>`${esc(x.expenseItem||"未填項目")} ${money(x.expense)}元`).join("<br>")}</td><td>${a.map(x=>`${esc(x.incomeItem||"未填項目")} ${money(x.manualIncome)}元`).join("<br>")}</td></tr>`}
+ $("yearTable").innerHTML=`<tr><th>月份</th><th>噸數</th><th>車趟</th><th>金額</th><th>％計算金額</th><th>支出項目／金額</th><th>收入項目／金額</th></tr>${rows}<tr><th>全年</th><th>${c.tons.toFixed(2)}</th><th>${c.trips}</th><th>${money(c.amount)}</th><th class="year-percent">${money(c.percentAmount)}</th><th>${arr.map(x=>`${esc(x.expenseItem||"未填項目")} ${money(x.expense)}元`).join("<br>")}</th><th>${arr.map(x=>`${esc(x.incomeItem||"未填項目")} ${money(x.manualIncome)}元`).join("<br>")}</th></tr>`;
+}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function renderLayoutCards(){
+ const y=String($("yearPicker").value||new Date().getFullYear());
+ const arr=data.filter(x=>x.date.startsWith(y+"-"));
+ const z=calc(arr);
+ const tons=arr.reduce((s,x)=>s+num(x.tons)*num(x.tonTrips),0);
+ $("layoutTons").textContent=tons.toFixed(2);
+ $("layoutTrips").textContent=money(z.trips);
+ $("layoutAmount").textContent=money(z.amount);
+ $("layoutPercent").textContent=money(z.percentAmount);
+ const ex=arr.filter(x=>x.expenseItem||num(x.expense)>0).slice(-6);
+ const inc=arr.filter(x=>x.incomeItem||num(x.manualIncome)>0).slice(-6);
+ $("layoutExpenseList").innerHTML=ex.length?ex.map(x=>esc(x.expenseItem||"未填項目")+"　"+money(x.expense)+" 元").join("<br>"):"尚無資料";
+ $("layoutIncomeList").innerHTML=inc.length?inc.map(x=>esc(x.incomeItem||"未填項目")+"　"+money(x.manualIncome)+" 元").join("<br>"):"尚無資料";
+}
+function renderAll(){renderDaily();renderMonth();renderYear();renderLayoutCards()}
+$("date").onchange=renderDaily;$("monthPicker").onchange=renderMonth;$("yearPicker").onchange=renderYear;
+
+function backupInfo(){
+ if(!data.length) return "本次備份共 0 筆資料。";
+ const dates=data.map(x=>x.date).filter(Boolean).sort();
+ return `本次共備份 ${data.length} 筆資料。\n資料日期：${dates[0]} ～ ${dates[dates.length-1]}`;
+}
+$("dailyBackup").onclick=()=>{
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);a.download=`車趟日報備份_${backupStamp()}.json`;a.click();URL.revokeObjectURL(a.href);
+ alert(backupInfo()+"\n\n備份檔已產生，請將檔案保存到「檔案」App 或 iCloud。");
+};
+function backupAll(){
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);a.download=`車趟日報備份_${backupStamp()}.json`;a.click();URL.revokeObjectURL(a.href);
+ alert(backupInfo()+"\n\n備份檔已產生，請將檔案保存到「檔案」App 或 iCloud。");
+}
+if($("monthBackup")) $("monthBackup").onclick=backupAll;
+if($("yearBackup")) $("yearBackup").onclick=backupAll;
+$("export").onclick=()=>{
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);a.download=`車趟日報備份_${backupStamp()}.json`;a.click();URL.revokeObjectURL(a.href);
+};
+function openRestore(){ $("file").click(); }
+$("importBtn").onclick=openRestore;
+$("dailyRestore").onclick=openRestore;
+$("monthRestore").onclick=openRestore;
+$("yearRestore").onclick=openRestore;
+$("file").onchange=e=>{
+  const f=e.target.files[0];
+  if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const x=JSON.parse(r.result);
+      if(!Array.isArray(x)) throw new Error("格式錯誤");
+      const ok=confirm(`確定要還原這份備份嗎？\n\n備份內有 ${x.length} 筆資料。\n還原後，目前資料會被這份備份取代。\n\n不確定請按「取消」。`);
+      if(ok){
+        data=x;
+        saveData();
+        renderAll();
+        alert("✅ 備份已成功還原");
+      }
+    }catch(err){
+      alert("無法讀取這份備份檔，請選擇車趟日報的 .json 備份。");
+    }
+    e.target.value="";
+  };
+  r.readAsText(f);
+};
+renderAll();
+</script>
+</body>
+</html>
