@@ -2,9 +2,9 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=1280,initial-scale=0.3,minimum-scale=0.2,maximum-scale=3,user-scalable=yes,viewport-fit=cover">
+<meta name="viewport" content="width=1024,initial-scale=0.38,minimum-scale=0.3,maximum-scale=3,user-scalable=yes,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
-<meta name="app-version" content="20260919-home-new-v1">
+<meta name="app-version" content="20260919-home-new-v2">
 <title>🚚 車趟日報</title>
 <style>
 *{box-sizing:border-box}
@@ -134,6 +134,33 @@ main{margin-bottom:0!important}
 .dashboard-bottom{margin-bottom:0!important}
 .layout-footer{margin-bottom:0!important}
 @supports(height:100dvh){body{min-height:100dvh!important}}
+
+/* 手機新案 v2：依使用者參考圖比例重排，避免整張縮得太小 */
+html,body{width:1024px!important;min-width:1024px!important;min-height:1536px!important;background:#eef8ff!important}
+header{width:1024px!important;padding:10px 12px 8px!important}
+.dashboard-head,.tabs{width:1000px!important;max-width:1000px!important}
+.dashboard-head{height:105px!important}
+.brand-icon{font-size:48px!important}.brand-copy h1{font-size:40px!important}.brand-copy p{font-size:18px!important}
+.head-actions button{width:76px!important;min-width:76px!important;height:82px!important}
+.tabs{height:68px!important}.tabs button{font-size:22px!important}
+main{width:1000px!important;max-width:1000px!important;grid-template-columns:330px 330px 320px!important;gap:10px!important;padding:10px 0 0!important}
+main>section{min-height:930px!important;padding:8px!important}
+#daily .grid{grid-template-columns:1fr!important}
+#daily .grid label.full{grid-column:auto!important}
+#daily .grid label{display:grid!important;grid-template-columns:92px 1fr!important;align-items:center!important;gap:7px!important;font-size:15px!important}
+#daily .grid input{min-height:39px!important;font-size:16px!important}
+#daily .note{font-size:9px!important}
+#daily .record{font-size:11px!important}
+#daily .summary .metric b{font-size:16px!important}
+#monthly .table th,#monthly .table td,#yearly .table th,#yearly .table td{padding:9px 4px!important;font-size:11px!important}
+#monthly .tablewrap,#yearly .tablewrap{min-height:565px!important}
+#monthly .table,#yearly .table{height:auto!important}
+.control-card h2{font-size:22px!important}
+.total-card{margin-top:10px!important}
+.dashboard-bottom{width:1000px!important;max-width:1000px!important;grid-template-columns:440px repeat(4,1fr)!important;gap:8px!important}
+.finance-card,.dash-kpi{min-height:180px!important}
+.layout-footer{min-width:460px!important;font-size:16px!important}
+body:after{background:linear-gradient(180deg,#f8fcff 0%,#eef8ff 100%)!important}
 </style>
 </head>
 <body>
