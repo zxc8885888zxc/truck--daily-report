@@ -57,6 +57,7 @@ try{const input=JSON.parse(localStorage.getItem(k)||'null');if(input&&input.year
 })();
 </script><style>
 #pillars{display:block;overflow:auto}.chart-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border:1px solid #222;margin-bottom:8px}.chart-meta div{padding:6px;border:1px solid #aaa;font-size:13px}.chart{border-collapse:collapse;width:100%;min-width:470px;table-layout:fixed}.chart th,.chart td{border:1px solid #222;text-align:center;padding:8px 3px;white-space:normal}.chart th{font-size:15px;font-weight:650}.chart .big{font-size:27px;font-weight:750}.chart .small{font-size:13px;line-height:1.5}.chart tr:first-child th{background:#eee}.fortune-list{margin-top:13px}.fortune-list details{border-top:1px solid #999;padding:7px}.fortune-list summary{cursor:pointer}.fortune-years{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin:7px 0}.fortune-years span{border:1px solid #bbb;padding:5px;font-size:12px}.role-strip{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border:1px solid #222;margin:12px 0}.role-strip div{text-align:center;border-right:1px solid #222;padding:7px 2px;font-size:12px;line-height:1.45}.role-strip div:last-child{border:0}.role-strip strong{display:block;font-size:15px}.year-block{border-top:1px solid #aaa;padding:11px 0}.year-block summary{font-weight:650;cursor:pointer}.year-block p{font-size:14px;line-height:1.7;margin:7px 0}.year-block .tag{font-weight:650}
+.role-strip .role-element{display:block;overflow-wrap:anywhere;margin-top:4px}
 @media(max-width:560px){.chart{min-width:0}.chart th,.chart td{padding:5px 2px}.chart .big{font-size:21px}.chart .small{font-size:11px}.role-strip div{font-size:10px}.role-strip strong{font-size:13px}}
 </style>
 <script>
@@ -73,6 +74,17 @@ function ten(day,other){
  return b===a?(same?'比肩':'劫財'):b===(a+1)%5?(same?'食神':'傷官'):b===(a+2)%5?(same?'偏財':'正財'):b===(a+3)%5?(same?'七殺':'正官'):(same?'偏印':'正印')
 }
 function td(row,label,values,cl=''){const tr=document.createElement('tr'),heading=document.createElement('th');heading.textContent=label;tr.append(heading);for(const value of values){const cell=document.createElement('td');cell.className=cl;cell.textContent=value;tr.append(cell)}row.append(tr)}
+const categories=['用神','喜神','忌神','閒神','仇神'];
+function fillRoleGroups(host,day){
+ host.replaceChildren();
+ for(const category of categories){
+  const cell=document.createElement('div'),heading=document.createElement('strong');heading.textContent=category;cell.append(heading);
+  const matches=E.filter(e=>$('role'+e)?.value===category);
+  if(!matches.length){const blank=document.createElement('span');blank.textContent='—';cell.append(blank)}
+  for(const e of matches){const line=document.createElement('span');line.className='role-element';line.textContent=e+'：'+[...stems].filter(s=>el(s)===e).map(s=>s+ten(day,s)).join('／');cell.append(line)}
+  host.append(cell)
+ }
+}
 function chart(pillars){
  const day=pillars[2][0],order=[3,2,1,0],p=order.map(i=>pillars[i]);
  const meta=document.createElement('div'),api=window.__baziEightChar;
@@ -90,8 +102,8 @@ function chart(pillars){
  td(table,'五行',p.map(part=>el(part[0])+'／'+el(part[1])));
  td(table,'藏干',p.map(part=>hidden[part[1]].split('').join('、')),'small');
  td(table,'藏干十神',p.map(part=>[...hidden[part[1]]].map(g=>ten(day,g)).join('、')),'small');
- const roles=p.map(part=>el(part[0])+' '+$('role'+el(part[0]))?.value+'／'+el(part[1])+' '+$('role'+el(part[1]))?.value);
- td(table,'喜用忌神自動分析',roles,'small');
+ const roleHeading=document.createElement('tr'),roleTitle=document.createElement('th');roleTitle.colSpan=5;roleTitle.textContent='喜用忌神自動分析';roleHeading.append(roleTitle);table.append(roleHeading);
+ const roleRow=document.createElement('tr'),roleCell=document.createElement('td');roleCell.colSpan=5;const chartGroups=document.createElement('div');chartGroups.className='role-strip';chartGroups.id='chartRoleGroups';roleCell.append(chartGroups);roleRow.append(roleCell);table.append(roleRow);
  const fortune=document.createElement('div');fortune.className='fortune-list';const head=document.createElement('h3');head.textContent='大運與十神（到 100 歲）';fortune.append(head);
  for(const decade of $('years').children){const label=decade.querySelector(':scope > summary')?.textContent||'',lucky=(label.match(/｜([甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥])｜/)||[])[1];const group=document.createElement('details');const match=label.match(/｜(\d{4})[–-](\d{4}) 年/);if(match&&+match[1]<=new Date().getFullYear()&&new Date().getFullYear()<=+match[2])group.open=true;const title=document.createElement('summary');title.textContent=label+'｜大運十神：'+(lucky?ten(day,lucky[0]):'起運前');group.append(title);
   const years=document.createElement('div');years.className='fortune-years';for(const year of decade.querySelectorAll(':scope > details')){const line=year.querySelector('summary')?.textContent||'';const y=(line.match(/｜([甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥])｜/)||[])[1];if(!y)continue;const span=document.createElement('span');span.textContent=line.split('｜')[0]+'｜'+y+' '+ten(day,y[0]);years.append(span)}const sub=document.createElement('h4');sub.textContent='流年與十神';group.append(sub,years);fortune.append(group)}
@@ -114,8 +126,9 @@ function roles(pillars){
  $('roleHeuristic')?.remove();$('roleStrip')?.remove();
  const day=pillars[2][0],strip=document.createElement('div');strip.className='role-strip';strip.id='roleStrip';
  const caption=document.createElement('p');caption.className='hint';caption.id='roleHeuristic';caption.textContent='喜用忌為五行與月支力量的自動初判；可在下方調整。合化、根氣及阻隔需另行核對。';
- const refresh=()=>{strip.replaceChildren();for(const e of E){const cell=document.createElement('div'),label=document.createElement('strong');label.textContent=e+' '+$('role'+e).value;cell.append(label);const stemsFor=Array.from(stems).filter(s=>el(s)===e);cell.append(stemsFor.map(s=>s+' '+ten(day,s)).join('／'));strip.append(cell)}const row=[...document.querySelectorAll('#pillars .chart tr')].find(tr=>tr.querySelector('th')?.textContent==='喜用忌神自動分析');if(row){[3,2,1,0].forEach((i,j)=>{const part=pillars[i],a=el(part[0]),b=el(part[1]);row.children[j+1].textContent=a+' '+$('role'+a).value+'／'+b+' '+$('role'+b).value})}};
- $('elements').after(caption,strip);$('settings').querySelectorAll('select').forEach(x=>x.addEventListener('change',refresh));refresh();$('role木').dispatchEvent(new Event('change'))
+ const refresh=()=>{fillRoleGroups(strip,day);fillRoleGroups($('chartRoleGroups'),day)};
+ $('elements').after(caption,strip);refresh();$('role木').dispatchEvent(new Event('change'));
+ $('settings').querySelectorAll('select').forEach(x=>x.addEventListener('change',()=>{refresh();yearAnalysis(pillars)}))
 }
 function narrative(pillars,luck,annual){
  const day=pillars[2][0], names=['年','月','日','時'],month=pillars[1][1],root=pillars.map((p,i)=>[...hidden[p[1]]].some(h=>el(h)===el(day))?names[i]+'支'+p[1]:null).filter(Boolean);
