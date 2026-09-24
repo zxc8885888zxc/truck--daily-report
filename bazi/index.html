@@ -55,4 +55,73 @@ try{const input=JSON.parse(localStorage.getItem(k)||'null');if(input&&input.year
  document.getElementById('calendar').dispatchEvent(new Event('change'));f.requestSubmit()
 }}catch{}
 })();
+</script><style>
+#pillars{display:block;overflow:auto}.chart{border-collapse:collapse;width:100%;min-width:470px;table-layout:fixed}.chart th,.chart td{border:1px solid #222;text-align:center;padding:8px 3px;white-space:normal}.chart th{font-size:15px;font-weight:650}.chart .big{font-size:27px;font-weight:750}.chart .small{font-size:13px;line-height:1.5}.chart tr:first-child th{background:#eee}.role-strip{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border:1px solid #222;margin:12px 0}.role-strip div{text-align:center;border-right:1px solid #222;padding:7px 2px;font-size:12px;line-height:1.45}.role-strip div:last-child{border:0}.role-strip strong{display:block;font-size:15px}.year-block{border-top:1px solid #aaa;padding:11px 0}.year-block summary{font-weight:650;cursor:pointer}.year-block p{font-size:14px;line-height:1.7;margin:7px 0}.year-block .tag{font-weight:650}
+@media(max-width:560px){.chart{min-width:0}.chart th,.chart td{padding:5px 2px}.chart .big{font-size:21px}.chart .small{font-size:11px}.role-strip div{font-size:10px}.role-strip strong{font-size:13px}}
+</style>
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const E=['木','火','土','金','水'], stems='甲乙丙丁戊己庚辛壬癸', stemElements='木木火火土土金金水水';
+const branchElements={子:'水',丑:'土',寅:'木',卯:'木',辰:'土',巳:'火',午:'火',未:'土',申:'金',酉:'金',戌:'土',亥:'水'};
+const hidden={子:'癸',丑:'己癸辛',寅:'甲丙戊',卯:'乙',辰:'戊乙癸',巳:'丙戊庚',午:'丁己',未:'己丁乙',申:'庚壬戊',酉:'辛',戌:'戊辛丁',亥:'壬甲'};
+const clashes=['子午','丑未','寅申','卯酉','辰戌','巳亥'];
+function el(stem){return stemElements[stems.indexOf(stem)]||branchElements[stem]||''}
+function ten(day,other){
+ const a=E.indexOf(el(day)),b=E.indexOf(el(other)),same=stems.indexOf(day)%2===stems.indexOf(other)%2;
+ if(a<0||b<0)return '';
+ return b===a?(same?'比肩':'劫財'):b===(a+1)%5?(same?'食神':'傷官'):b===(a+2)%5?(same?'偏財':'正財'):b===(a+3)%5?(same?'七殺':'正官'):(same?'偏印':'正印')
+}
+function td(row,label,values,cl=''){const tr=document.createElement('tr'),heading=document.createElement('th');heading.textContent=label;tr.append(heading);for(const value of values){const cell=document.createElement('td');cell.className=cl;cell.textContent=value;tr.append(cell)}row.append(tr)}
+function chart(pillars){
+ const day=pillars[2][0];const table=document.createElement('table');table.className='chart';
+ const tr=document.createElement('tr');let th=document.createElement('th');th.textContent='命盤';tr.append(th);
+ ['年柱','月柱','日柱','時柱'].forEach(t=>{th=document.createElement('th');th.textContent=t;tr.append(th)});table.append(tr);
+ td(table,'十神',pillars.map((p,i)=>i===2?'日主':ten(day,p[0])));
+ td(table,'八字',pillars,'big');
+ td(table,'五行',pillars.map(p=>el(p[0])+'／'+el(p[1])));
+ td(table,'藏干',pillars.map(p=>hidden[p[1]].split('').join('、')),'small');
+ td(table,'藏干十神',pillars.map(p=>[...hidden[p[1]]].map(g=>ten(day,g)).join('、')),'small');
+ $('pillars').replaceChildren(table)
+}
+function roleModel(pillars){
+ const day=E.indexOf(el(pillars[2][0])),counts=Object.fromEntries(E.map(e=>[e,0]));
+ for(const p of pillars){counts[el(p[0])]++;counts[el(p[1])]++}
+ counts[el(pillars[1][1])]+=2;
+ const own=E[day],resource=E[(day+4)%5];const support=counts[own]+counts[resource];const oppose=E.reduce((a,e)=>a+counts[e],0)-support;
+ const strong=support>=oppose;
+ // This public heuristic is a starting point; a month, root, and combinations must be checked by the user.
+ return Object.fromEntries(E.map((e,i)=>[e,strong?({0:'仇神',1:'喜神',2:'用神',3:'喜神',4:'忌神'})[(i-day+5)%5]:({0:'喜神',1:'閒神',2:'忌神',3:'仇神',4:'用神'})[(i-day+5)%5]]))
+}
+function roles(pillars){
+ const key=['gender','calendar','year','month','day','hour','leap'].map(id=>$(id).type==='checkbox'?Number($(id).checked):$(id).value).join('|');
+ let saved={};try{saved=JSON.parse(localStorage.getItem('bazi-public-roles-v1')||'{}')[key]||{}}catch{}
+ const defaults=roleModel(pillars);
+ for(const e of E){const select=$('role'+e);if(select&&!saved[e])select.value=defaults[e]}
+ $('roleHeuristic')?.remove();$('roleStrip')?.remove();
+ const day=pillars[2][0],strip=document.createElement('div');strip.className='role-strip';strip.id='roleStrip';
+ const caption=document.createElement('p');caption.className='hint';caption.id='roleHeuristic';caption.textContent='喜用忌為五行與月支力量的自動初判；可在下方調整。合化、根氣及阻隔需另行核對。';
+ const refresh=()=>{strip.replaceChildren();for(const e of E){const cell=document.createElement('div'),label=document.createElement('strong');label.textContent=e+' '+$('role'+e).value;cell.append(label);const stemsFor=Array.from(stems).filter(s=>el(s)===e);cell.append(stemsFor.map(s=>s+' '+ten(day,s)).join('／'));strip.append(cell)}};
+ $('elements').after(caption,strip);$('settings').querySelectorAll('select').forEach(x=>x.addEventListener('change',refresh));refresh();$('role木').dispatchEvent(new Event('change'))
+}
+function yearAnalysis(pillars){
+ let section=$('combinedYear');if(!section){section=document.createElement('section');section.id='combinedYear';section.innerHTML='<h2>大運 × 流年逐年分析（到 100 歲）</h2><p class="hint">依原局四柱、大運與當年干支一起列出關係；藏干受沖表示可能被引動，不代表已確實透出或發生事件。</p><div id="combinedRows"></div>';$('years').closest('section').after(section)}
+ const out=$('combinedRows');out.replaceChildren();
+ for(const decade of $('years').children){const decadeText=decade.querySelector(':scope > summary')?.textContent||'';const luck=(decadeText.match(/｜([甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥])｜/)||[])[1];
+  for(const year of decade.querySelectorAll(':scope > details')){
+   const summary=year.querySelector('summary')?.textContent||'';const annual=(summary.match(/｜([甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥])｜/)||[])[1];
+   if(!annual)continue;
+   const row=document.createElement('details');row.className='year-block';const title=document.createElement('summary');title.textContent=summary.replace(/｜[^｜]+$/,'')+'｜大運 '+(luck||'起運前')+' × 流年 '+annual;row.append(title);
+   const paragraph=document.createElement('p');paragraph.textContent=year.querySelector('div')?.textContent||'';row.append(paragraph);
+   let impacts=[];for(const [i,p] of pillars.entries())for(const [actor,label] of [[luck,'大運'],[annual,'流年']]){
+    if(!actor||!clashes.some(pair=>pair.includes(actor[1])&&pair.includes(p[1])))continue;
+    const h=[...hidden[p[1]]];impacts.push(label+' '+actor[1]+' 沖原局'+['年','月','日','時'][i]+'支 '+p[1]+'；該支藏干 '+h.join('、')+'，五行 '+[...new Set(h.map(el))].join('、')+' 受沖動'+('辰戌丑未'.includes(p[1])?'（墓庫藏氣需看透干與力量）':''))
+   }
+   if(luck&&clashes.some(pair=>pair.includes(luck[1])&&pair.includes(annual[1])))impacts.push('大運 '+luck[1]+' 與流年 '+annual[1]+' 相沖，還須核對原局是否受沖。');
+   const p=document.createElement('p');p.textContent=impacts.length?impacts.join('；')+'。':'沒有六沖原局；仍需查看上方合、半合、刑、破、害。';row.append(p);out.append(row)
+  }
+ }
+}
+$('form').addEventListener('submit',()=>{if($('error').textContent)return;const raw=[...$('pillars').querySelectorAll('.pillar strong')].map(x=>x.textContent.trim());if(raw.length!==4)return;chart(raw);roles(raw);yearAnalysis(raw)});
+})();
 </script></body></html>
