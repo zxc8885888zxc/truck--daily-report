@@ -187,6 +187,43 @@ function narrative(pillars,luck,annual){
  if(impacted.length)summary+=' 喜忌核對：'+impacted.map(e=>e+' '+$('role'+e).value).join('、')+'；喜用神受沖也可能受損，需依月令、根氣、透干與阻隔再判斷。';
  return summary
 }
+function pillarEvents(pillars,luck,annual){
+ const names=['年柱','月柱','日柱','時柱'];
+ const domains=[
+  '長輩、原生家庭、舊有人脈與外部環境；留意聯絡安排、遠行與居住規畫',
+  '工作、職務、合作與日常環境；留意合約分工、工作節奏及與家人的溝通',
+  '自身選擇、伴侶或親近關係；留意重大決定、相處方式與資源分配',
+  '晚輩、作品、長期計畫與後續安排；留意進度、出行和對後續責任的承諾'
+ ];
+ const pairs={沖:clashes,刑:['寅巳','巳申','申寅','丑戌','戌未','未丑','子卯','辰辰','午午','酉酉','亥亥'],破:['子酉','丑辰','寅亥','卯午','巳申','未戌'],害:['子未','丑午','寅巳','卯辰','申亥','酉戌']};
+ const reminders={沖:'可能有明顯變動或兩方拉扯，先核對時間、文件及替代安排',刑:'可能反覆磨合或自我施壓，重要決定先釐清責任並留書面紀錄',破:'原有合作或進度可能出現缺口，檢查承諾、期限與執行細節',害:'可能有誤解或暗中耗損，溝通時核對資訊與彼此期待'};
+ const actors=[['大運',luck],['流年',annual]].filter(x=>x[1]);
+ return pillars.map((p,i)=>{
+  const contact=[],checks=[];
+  for(const [label,actor] of actors){
+   const a=actor[1],b=p[1];
+   for(const [type,match] of Object.entries(pairs)){
+    if(match.some(pair=>pair.includes(a)&&pair.includes(b)&&(a!==b||pair[0]===pair[1]))){
+     contact.push(label+actor+'與'+names[i]+p+'的'+a+b+'見'+type);
+     if(!checks.includes(reminders[type]))checks.push(reminders[type]);
+    }
+   }
+  }
+  const day=pillars[2][0],hs=[...hidden[p[1]]],main=hs[0],element=el(main),role=$('role'+element)?.value||'未設定';
+  const roots=hs.filter(h=>el(h)===el(day)).map(h=>h+el(h));
+  const grave='辰戌丑未'.includes(p[1])&&contact.some(x=>x.includes('見沖'))?'；此支為墓庫，藏干'+hs.slice(1).map(h=>h+el(h)+'／'+ten(day,h)).join('、')+'受引動，是否透出仍須看天干與月令':'';
+  const rootTip=roots.length&&contact.some(x=>x.includes('見沖'))?'；此支有日主根'+roots.join('、')+'，須核對其他根是否能承接沖動':'';
+  const focus=contact.length?contact.join('；')+'。'+checks.join('；')+'。':'大運與流年未直接對此支形成沖、刑、破、害；仍須合看其他柱與天干。';
+  const tendency=['用神','喜神'].includes(role)?'主氣屬喜用，受引動可能出現機會，也要檢查是否受損':['忌神','仇神'].includes(role)?'主氣屬忌仇，若被助旺須留意負擔，若受制則未必不利':'主氣屬閒神，觀察其與喜用的生剋';
+  return names[i]+' '+p+'：'+focus+' 對照範圍：'+domains[i]+'。本支主氣'+main+element+'／'+ten(day,main)+'（'+role+'）；'+tendency+rootTip+grave+'。以上是可核對的方向，不能據此認定特定事件已發生。'
+ })
+}
+function appendPillarEvents(host,lines,className){
+ const box=document.createElement('div');box.className=className;
+ const heading=document.createElement('h4');heading.textContent='年、月、日、時柱：可能引動與注意事項';box.append(heading);
+ for(const line of lines){const p=document.createElement('p');p.textContent=line;box.append(p)}
+ host.append(box)
+}
 function yearAnalysis(pillars){
  let section=$('combinedYear');if(!section){section=document.createElement('section');section.id='combinedYear';section.innerHTML='<h2>大運碰上流年分析（到 100 歲）</h2><p class="hint">依原局四柱、大運與當年干支一起列出關係；藏干受沖表示可能被引動，不代表已確實透出或發生事件。</p><div id="combinedRows"></div>';$('years').closest('section').after(section)}
  const out=$('combinedRows');out.replaceChildren();
@@ -199,9 +236,10 @@ function yearAnalysis(pillars){
    const movedLabels=moved.map(({i,p})=>['年','月','日','時'][i]+'柱'+p[1]+'（'+[...hidden[p[1]]].map(g=>g+el(g)).join('、')+'）');
    const impactedStems=[...new Set(hits.flatMap(({p})=>[...hidden[p[1]]].map(g=>g+el(g))))];
    const row=document.createElement('details');row.className='year-block';const title=document.createElement('summary');title.textContent=summary.replace(/｜[^｜]+$/,'')+'｜大運 '+(luck||'起運前')+' × 流年 '+annual+'｜沖入原局：'+(impactedStems.join('、')||'無')+'｜沖出訊號：'+([...new Set(movedLabels)].join('、')||'無');row.append(title);
-   const paragraph=document.createElement('p');paragraph.textContent=year.querySelector('div')?.textContent||'';row.append(paragraph);
+   const top=year.querySelector('div');const paragraph=document.createElement('p');paragraph.textContent=top?.firstChild?.textContent?.trim()||'';row.append(paragraph);
+   const alerts=pillarEvents(pillars,luck,annual);appendPillarEvents(row,alerts,'auto-pillar');
    const detail=narrative(pillars,luck,annual);const p=document.createElement('p');p.textContent=detail;row.append(p);out.append(row);
-   const top=year.querySelector('div');if(top){const more=document.createElement('p');more.textContent=detail;top.append(more)}
+   if(top){top.querySelectorAll('.auto-pillar,.auto-narrative').forEach(x=>x.remove());appendPillarEvents(top,alerts,'auto-pillar');const more=document.createElement('p');more.className='auto-narrative';more.textContent=detail;top.append(more)}
   }
  }
 }
